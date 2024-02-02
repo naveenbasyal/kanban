@@ -1,0 +1,12 @@
+const { createBoard, deleteBoard, updateBoard, editNameDescription } = require("../controllers/board");
+
+const router = require("express").Router();
+
+// ----- boards routes ------
+router.post("/:projectId/create", createBoard);
+router.delete("/:projectId/", deleteBoard);
+router.patch("/update", updateBoard);
+router.patch("/editNameDescription", editNameDescription);
+
+
+module.exports = router;
