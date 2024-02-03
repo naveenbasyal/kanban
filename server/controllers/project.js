@@ -38,10 +38,9 @@ const getAllProjects = async (req, res) => {
         path: "boards",
         populate: {
           path: "columns",
-          options: { sort: { order: 1 } },
+
           populate: {
             path: "tasks",
-            // options: { sort: { order: 1 } },
 
             populate: {
               path: "assignedTo",

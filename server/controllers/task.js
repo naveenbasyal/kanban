@@ -51,6 +51,7 @@ const deleteTask = async (req, res) => {
 
 const updateTask = async (req, res) => {
   const { taskId, text, labels, flagged } = req.body;
+
   console.log(text, labels, flagged, taskId);
   try {
     const task = await Task.findById(taskId);
@@ -59,7 +60,7 @@ const updateTask = async (req, res) => {
       {
         text: text ? text : task.text,
         labels: labels ? labels : task.labels,
-        flagged: flagged ? flagged : task.flagged,
+        flagged: flagged,
       },
       { new: true }
     );

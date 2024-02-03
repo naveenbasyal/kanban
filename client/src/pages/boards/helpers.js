@@ -2,11 +2,14 @@ import { AiOutlineDelete, AiOutlineLoading3Quarters } from "react-icons/ai";
 import { ThreeDots } from "../../components/svg";
 import { FaRegEdit, FaRegFlag } from "react-icons/fa";
 import { MdLabelImportantOutline } from "react-icons/md";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { updateTaskById } from "../../store/slices/TaskSlice";
+import { getAllProjects } from "../../store/slices/projectSlice";
+import { useState } from "react";
 
 export const ColumnEditorTool = ({
   isOpen,
-
+  setColLimit,
   setIsOpen,
   col,
   openId,
@@ -29,7 +32,7 @@ export const ColumnEditorTool = ({
             isOpen && openId == col._id
               ? " bg-indigo-100"
               : "bg-transparent text-gray-900 outline-none  "
-          } border-none w-full justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+          } border-none w-full h-10 items-center justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
           id="menu-button"
           aria-expanded="true"
           aria-haspopup="true"
@@ -51,6 +54,7 @@ export const ColumnEditorTool = ({
         <div className="py-3 flex flex-col gap-2" role="none">
           <span
             onClick={() => {
+              setColLimit(col);
               setIsOpen(false);
             }}
             className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
@@ -94,6 +98,9 @@ export const TaskEditorTool = ({
   loading,
   handleDeleteTask,
 }) => {
+  const dispatch = useDispatch();
+  const { editLoading } = useSelector((state) => state?.task);
+
   return (
     <div className="relative inline-block text-left">
       <div>
@@ -107,7 +114,7 @@ export const TaskEditorTool = ({
             isOpen && openId == task._id
               ? " bg-indigo-100"
               : "bg-transparent text-gray-900 outline-none  "
-          } border-none w-full justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+          } border-none w-full h-10 items-center justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
           id="menu-button"
           aria-expanded="true"
           aria-haspopup="true"
@@ -131,7 +138,7 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
             onClick={() => {
               setEditTaskId(task._id);
               setTaskToEdit(task);
-              setIsOpen(false);
+              !editLoading && setIsOpen(false);
             }}
             className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
             role="menuitem"
@@ -142,6 +149,15 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
           </span>
           <span
             onClick={() => {
+              dispatch(
+                updateTaskById({
+                  taskId: task._id,
+                  text: task.text,
+                  labels: task.labels,
+                  flagged: !task.flagged,
+                })
+              );
+              dispatch(getAllProjects());
               setIsOpen(false);
             }}
             className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
@@ -149,8 +165,12 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
             tabIndex="-1"
             id="menu-item-0"
           >
-            <FaRegFlag size={13} className="font-bold" />
-            Add Flag
+            {editLoading ? (
+              <AiOutlineLoading3Quarters size={16} className="animate-spin" />
+            ) : (
+              <FaRegFlag size={13} className="font-bold" />
+            )}
+            {task.flagged ? "Remove Flag" : "Add Flag"}
           </span>
 
           <span

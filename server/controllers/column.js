@@ -12,7 +12,6 @@ const createColumn = async (req, res) => {
         name,
         boardId,
         createdBy,
-        order: board.columns.length,
       });
 
       await column.save();
@@ -54,24 +53,21 @@ const deleteColumn = async (req, res) => {
   }
 };
 
+// draggin and dropping columns
 const updateColumnOrder = async (req, res) => {
   const { boardId, columnId, sourceIndex, destinationIndex } = req.body;
 
   try {
-    const allColumns = await Column.find({ boardId: boardId }).sort({
-      order: 1,
-    });
+    const board = await Board.findById(boardId);
 
     const draggedColumn = await Column.findById(columnId);
 
-    allColumns.splice(sourceIndex, 1);
+    console.log("baord columns Before", board.columns);
+    board.columns.splice(sourceIndex, 1);
+    board.columns.splice(destinationIndex, 0, draggedColumn._id);
 
-    allColumns.splice(destinationIndex, 0, draggedColumn);
-
-    for (let i = 0; i < allColumns.length; i++) {
-      allColumns[i].order = i;
-      await allColumns[i].save();
-    }
+    await board.save();
+    console.log("baord columns After", board.columns);
 
     return res.status(200).json({ message: "Column order updated" });
   } catch (err) {
@@ -80,4 +76,49 @@ const updateColumnOrder = async (req, res) => {
   }
 };
 
-module.exports = { createColumn, deleteColumn, updateColumnOrder };
+const changeColumnName = async (req, res) => {
+  const { columnId, newColumnName } = req.body;
+
+  console.log("columnId", columnId, newColumnName);
+  if (!columnId || !newColumnName)
+    return res
+      .status(400)
+      .json({ message: "Please provide columnId and newColumnName" });
+  try {
+    const column = await Column.findByIdAndUpdate(
+      columnId,
+      { name: newColumnName },
+      { new: true }
+    );
+    await column.save();
+    return res.status(200).json({ message: "Column name updated" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Something went wrong", err });
+  }
+};
+
+const UpdateColLimit = async (req, res) => {
+  const { columnId, limit } = req.body;
+
+  try {
+    const column = await Column.findByIdAndUpdate(
+      columnId,
+      { limit: limit },
+      { new: true }
+    );
+    await column.save();
+    return res.status(200).json({ message: "Column limit updated" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Something went wrong", err });
+  }
+};
+
+module.exports = {
+  createColumn,
+  deleteColumn,
+  updateColumnOrder,
+  changeColumnName,
+  UpdateColLimit
+};

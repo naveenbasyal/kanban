@@ -86,7 +86,7 @@ const deleteBoard = async (req, res) => {
   }
 };
 
-const updateBoard = async (req, res) => {
+const updateTaskOrder = async (req, res) => {
   const {
     destinationColumnId,
     sourceColumnId,
@@ -97,22 +97,32 @@ const updateBoard = async (req, res) => {
 
   try {
     if (sourceColumnId !== destinationColumnId) {
-      const sourceColumn = await Column.findById(sourceColumnId);
-      const column = Column.findById(destinationColumnId);
-      if (column) {
-        const destinationColumn = await Column.findById(destinationColumnId);
+      console.log("sourceColumnId", sourceColumnId);
+      console.log("destinationColumnId", destinationColumnId);
+      console.log("taskId", taskId);
+      console.log("sourceIndex", sourceIndex);
+      console.log("destinationIndex", destinationIndex);
 
+      const sourceColumn = await Column.findById(sourceColumnId);
+
+      const destinationColumn = await Column.findById(destinationColumnId);
+      console.log("sourceColumn", sourceColumn);
+      console.log("destinationColumn", destinationColumn);
+      if (destinationColumn) {
         // grabbing the task from source column
         const draggedTask = sourceColumn.tasks.find(
-          (task) => task._id.toString() === taskId
+          (task) => task?._id.toString() === taskId
         );
+        console.log("draggedTask", draggedTask);
         // removing the tasks from source column
         sourceColumn.tasks.splice(sourceIndex, 1);
         await sourceColumn.save();
+        console.log("sourceColumn after splice", sourceColumn);
         // adding the task to destination column
         destinationColumn.tasks.splice(destinationIndex, 0, draggedTask);
         await destinationColumn.save();
 
+        console.log("destinationColumn spliced", destinationColumn);
         // now we have to change the columnId of the task
         const task = await Task.findById(taskId);
         task.columnId = destinationColumnId;
@@ -148,9 +158,9 @@ const editNameDescription = async (req, res) => {
     const board = await Board.findByIdAndUpdate(
       boardId,
       {
-        title: title ? title : board.title,
-        description: description ? description : board.description,
-        status: status ? status : board.status,
+        title: title ? title : board?.title,
+        description: description,
+        status: status ? status : board?.status,
       },
       { new: true }
     );
@@ -161,4 +171,9 @@ const editNameDescription = async (req, res) => {
   }
 };
 
-module.exports = { createBoard, deleteBoard, updateBoard, editNameDescription };
+module.exports = {
+  createBoard,
+  deleteBoard,
+  updateTaskOrder,
+  editNameDescription,
+};

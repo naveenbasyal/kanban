@@ -44,6 +44,6 @@ html {
 }
 
 /* -----------TAsk cursor -------------- */
-[data-rbd-drag-handle-context-id="0"] {
+[data-rbd-drag-handle-context-id="5"] {
   cursor: default!important;
 }

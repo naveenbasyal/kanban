@@ -53,7 +53,6 @@ const App = () => {
   const dispatch = useDispatch();
 
   const [allProjects, setAllProjects] = useState([]);
-  // console.log("App Changed");
 
   useEffect(() => {
     const getData = async () => {

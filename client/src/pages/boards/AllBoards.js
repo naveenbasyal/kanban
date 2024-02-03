@@ -74,7 +74,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                           isOpen && openId == board._id
                             ? " bg-indigo-100"
                             : "bg-transparent text-gray-900 outline-none  "
-                        } border-none w-full justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+                        } border-none w-full justify-center gap-x-1.5 h-8 items-center  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
                         id="menu-button"
                         aria-expanded="true"
                         aria-haspopup="true"
@@ -101,24 +101,24 @@ const AllBoards = ({ boards, project, setProject }) => {
                       <div className="py-3 flex flex-col gap-2" role="none">
                         {/* Board status change */}
                         <span
-                          className="flex gap-3 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+                          className="flex gap-3 text-gray-700  items-center px-4 py-2 text-xl "
                           role="menuitem"
                           tabIndex="-1"
                           id="menu-item-0"
                         >
                           {board.status == "active" ? (
-                            <div className="span flex gap-2 items-center hover:text-yellow-500">
+                            <div className="span flex gap-2 items-center transition-colors duration-200 hover:text-blue-500">
                               <ActiveIndicator width={"14px"} height={"14px"} />
                               Active
                             </div>
                           ) : board.status == "paused" ? (
-                            <div className="span flex gap-2 items-center hover:text-blue-500">
+                            <div className="span flex gap-2 items-center transition-colors duration-200 hover:text-yellow-500">
                               <PausedIndicator width={"14px"} height={"14px"} />{" "}
                               Paused
                             </div>
                           ) : (
                             board.status == "finished" && (
-                              <div className="span flex gap-2 items-center hover:text-green-500">
+                              <div className="span flex gap-2 items-center transition-colors duration-200 hover:text-green-500">
                                 <FinishedIndicator
                                   width={"14px"}
                                   height={"14px"}
@@ -130,7 +130,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                         </span>
 
                         <Link
-                          to={`/board/${board?._id}`}
+                          to={`board/${board?._id}`}
                           className="flex items-center gap-3 hover:text-indigo-500 text-gray-700  px-4 py-2 text-xl hover:bg-gray-100"
                           role="menuitem"
                           tabIndex="-1"
@@ -187,8 +187,10 @@ const AllBoards = ({ boards, project, setProject }) => {
                     <ActiveIndicator width="20" height="20" />
                   ) : board.status == "paused" ? (
                     <PausedIndicator width="20" height="20" />
-                  ) : board.status == "finished" && (
-                    <FinishedIndicator width="20" height="20" />
+                  ) : (
+                    board.status == "finished" && (
+                      <FinishedIndicator width="20" height="20" />
+                    )
                   )}
                   {board.title}
                 </div>

@@ -53,7 +53,7 @@ export const deleteSingleProject = createAsyncThunk(
         body: JSON.stringify({ id }),
       });
       const data = await res.json();
-      console.log(data);
+
       return data;
     } catch (err) {
       return rejectWithValue(err.response);

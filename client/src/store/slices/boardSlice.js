@@ -47,8 +47,8 @@ export const DeleteBoardById = createAsyncThunk(
     }
   }
 );
-export const UpdateBoardById = createAsyncThunk(
-  "UpdateBoardById",
+export const UpdateTaskOrder = createAsyncThunk(
+  "UpdateTaskOrder",
   async (
     {
       destinationColumnId,
@@ -141,13 +141,13 @@ const boardSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     });
-    builder.addCase(UpdateBoardById.pending, (state, action) => {
+    builder.addCase(UpdateTaskOrder.pending, (state, action) => {
       state.loading = true;
     });
-    builder.addCase(UpdateBoardById.fulfilled, (state, action) => {
+    builder.addCase(UpdateTaskOrder.fulfilled, (state, action) => {
       state.loading = false;
     });
-    builder.addCase(UpdateBoardById.rejected, (state, action) => {
+    builder.addCase(UpdateTaskOrder.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload;
     });

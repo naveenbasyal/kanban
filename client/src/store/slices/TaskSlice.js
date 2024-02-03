@@ -45,7 +45,6 @@ export const DeleteTaskById = createAsyncThunk(
 export const updateTaskById = createAsyncThunk(
   "updateTaskById",
   async ({ taskId, text, labels, flagged }, { rejectWithValue }) => {
-    console.log(text, labels);
     try {
       const res = await fetch(`http://localhost:8000/api/task/updateTask`, {
         method: "PATCH",
@@ -68,6 +67,7 @@ export const updateTaskById = createAsyncThunk(
 const initialState = {
   task: {},
   loading: false,
+  editLoading: false,
   error: null,
 };
 
@@ -99,13 +99,13 @@ const taskSlice = createSlice({
       state.error = action.payload;
     });
     builder.addCase(updateTaskById.pending, (state, action) => {
-      state.loading = true;
+      state.editLoading = true;
     });
     builder.addCase(updateTaskById.fulfilled, (state, action) => {
-      state.loading = false;
+      state.editLoading = false;
     });
     builder.addCase(updateTaskById.rejected, (state, action) => {
-      state.loading = false;
+      state.editLoading = false;
       state.error = action.payload;
     });
   },

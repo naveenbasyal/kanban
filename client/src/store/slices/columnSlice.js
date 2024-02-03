@@ -64,7 +64,55 @@ export const UpdateColumnOrder = createAsyncThunk(
         }),
       });
       const data = await res.json();
-      console.log("Column Reorder Done", data);
+      console.log("Column Reorder Done->", data);
+      return data;
+    } catch (err) {
+      console.log(err);
+      rejectWithValue(err);
+    }
+  }
+);
+export const UpdateColName = createAsyncThunk(
+  "UpdateColName",
+  async ({ columnId, newColumnName }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/column/updateName`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          columnId,
+          newColumnName,
+        }),
+      });
+      const data = await res.json();
+      console.log("Column Rename Done", data);
+      return data;
+    } catch (err) {
+      console.log(err);
+      rejectWithValue(err);
+    }
+  }
+);
+export const UpdateColLimit = createAsyncThunk(
+  "UpdateColLimit",
+  async ({ columnId, limit }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/column/updateLimit`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          columnId,
+          limit,
+        }),
+      });
+      const data = await res.json();
+      console.log("Column Limit Done", data);
       return data;
     } catch (err) {
       console.log(err);
@@ -112,6 +160,26 @@ const columnSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(UpdateColumnOrder.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
+    builder.addCase(UpdateColName.pending, (state, action) => {
+      state.loading = true;
+    });
+    builder.addCase(UpdateColName.fulfilled, (state, action) => {
+      state.loading = false;
+    });
+    builder.addCase(UpdateColName.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
+    builder.addCase(UpdateColLimit.pending, (state, action) => {
+      state.loading = true;
+    });
+    builder.addCase(UpdateColLimit.fulfilled, (state, action) => {
+      state.loading = false;
+    });
+    builder.addCase(UpdateColLimit.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload;
     });

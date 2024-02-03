@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Fragment, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -26,9 +26,13 @@ const EditTaskOverlay = ({
   const [open, setOpen] = useState(false);
   const cancelButtonRef = useRef(null);
   const { loading } = useSelector((state) => state.task);
-  const [values, setValues] = useState({ text, labels, flagged });
+  const [values, setValues] = useState({});
   const [newLabel, setNewLabel] = useState("");
 
+  useEffect(() => {
+    dispatch(getAllProjects());
+    setValues({ text, labels, flagged });
+  }, [text, labels, flagged]);
   const handleUpdateTask = async () => {
     console.log(values);
     if (values.text.trim().length === 0)
@@ -213,12 +217,13 @@ const EditTaskOverlay = ({
                             id="hs-basic-usage"
                             name="hs-basic-usage"
                             checked={values.flagged}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              console.log(e.target.checked, "flagged");
                               setValues({
                                 ...values,
                                 flagged: e.target.checked,
-                              })
-                            }
+                              });
+                            }}
                             className="relative w-[3.25rem] h-7 p-px bg-gray-100 border-transparent text-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:ring-blue-600 disabled:opacity-50 disabled:pointer-events-none checked:bg-none checked:text-blue-600 checked:border-blue-600 focus:checked:border-blue-600  dark:checked:bg-blue-500 dark:checked:border-blue-500  before:inline-block before:w-6 before:h-6 before:bg-white checked:before:bg-blue-200 before:translate-x-0 checked:before:translate-x-full before:rounded-full before:shadow before:transform before:ring-0 before:transition before:ease-in-out before:duration-200 "
                           />
                         </div>

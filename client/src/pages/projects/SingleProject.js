@@ -8,6 +8,7 @@ import LoadingScreen from "../../components/ui/LoadingScreen";
 import AllBoards from "../boards/AllBoards";
 import createBoard from "../../assets/createBoard.png";
 import CreateBoard from "../boards/CreateBoard";
+import { NotFound } from "../../components/svg";
 
 const SingleProject = () => {
   const id = useParams()?.projectId;
@@ -156,13 +157,18 @@ const SingleProject = () => {
 
             {/* ______ ALL BOARDS ____ */}
 
-            {project?.boards ? (
+            {project?.boards?.length > 0 ? (
               <AllBoards
                 boards={project?.boards}
                 setProject={setProject}
                 project={project}
               />
-            ) : null}
+            ) : (
+              <div className="flex flex-col mt-[8rem] items-center justify-center gap-5 text-2xl text-gray-400">
+                <NotFound width={100} />
+                <div>Start creating boards to see them here.</div>
+              </div>
+            )}
 
             {/* ________ Create Board Overlay ______ */}
             {toggleCreateBoard ? (
