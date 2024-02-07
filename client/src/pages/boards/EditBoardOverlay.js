@@ -7,13 +7,14 @@ import {
   UpdateBoardNameOrDescription,
 } from "../../store/slices/boardSlice";
 import { Dialog, Transition } from "@headlessui/react";
-import { toast } from "react-toastify";
-import { useParams } from "react-router-dom";
+
 import { getAllProjects } from "../../store/slices/projectSlice";
 
 const EditBoardOverlay = ({
   setToggleEditBoard,
   toggleEditBoard: { title, description, _id, status },
+  board,
+  setBoard,
 }) => {
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
@@ -27,6 +28,12 @@ const EditBoardOverlay = ({
   });
 
   const handleUpdateBoard = async () => {
+    setBoard({
+      ...board,
+      status: values.status,
+      title: values.title,
+      description: values.description,
+    });
     const data = await dispatch(
       UpdateBoardNameOrDescription({
         boardId: _id,

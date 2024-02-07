@@ -20,15 +20,6 @@ const Accordion = ({ selectedProject, setSelectedProject, projects }) => {
         className="flex items-center cursor-pointer justify-between gap-5"
         onClick={toggleAccordion}
       >
-        <div className="project-logo">
-          <LazyLoadImage
-            alt="project logo"
-            width={30}
-            height={30}
-            className="rounded-full border-2 border-purple-dark"
-            src={selectedProject?.logo}
-          />
-        </div>
         <div className="flex-1 text-purple text-[1.4rem] font-[500]">
           {selectedProject?.title}
         </div>

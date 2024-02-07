@@ -9,13 +9,18 @@ import AllBoards from "../boards/AllBoards";
 import createBoard from "../../assets/createBoard.png";
 import CreateBoard from "../boards/CreateBoard";
 import { NotFound } from "../../components/svg";
+import EditProjectOverlay from "./EditProjectOverlay";
+import { useUser } from "../../Context/userContext";
 
-const SingleProject = () => {
+const SingleProject = ({ setAllProjects }) => {
   const id = useParams()?.projectId;
-
-  const { projects, loading } = useSelector((state) => state?.projects);
+  const { user } = useUser();
+  const { allProjects: projects, loading } = useSelector(
+    (state) => state?.projects
+  );
   const [project, setProject] = useState([]);
   const [toggleCreateBoard, setToggleCreateBoard] = useState(false);
+  const [editProject, setEditProject] = useState(null);
 
   useEffect(() => {
     const SingleProject = projects?.filter((project) => project._id === id);
@@ -25,7 +30,7 @@ const SingleProject = () => {
   return (
     <>
       {project && (
-        <div className="single-project m-10">
+        <div className="single-project mt-10 mb-20 mx-6">
           {/* ---------- Project Information and all the Boards of the project ------- */}
 
           <div className="flex gap-5 ">
@@ -45,12 +50,22 @@ const SingleProject = () => {
                 <div className="text-heading lg:text-[2.5rem] font-bold">
                   {project.title}
                 </div>
-                <div
-                  title="Edit project name"
-                  className="edit-title ml-10 transition-all duration-200 hover:shadow-lg active:translate-y-[1.4px] cursor-pointer hover:text-indigo-500 "
+                <button
+                  disabled={project?.userId?._id !== user?._id}
+                  onClick={() => setEditProject(project)}
+                  title={
+                    project?.userId?._id !== user?._id
+                      ? "Only project can edit this project"
+                      : "Edit project name"
+                  }
+                  className={`${
+                    project?.userId?._id !== user?._id
+                      ? "cursor-not-allowed text-gray-300 p-2 "
+                      : "hover:text-indigo-500 cursor-pointer text-heading"
+                  } edit-title ml-10 rounded-full transition-all duration-200 hover:shadow-lg active:translate-y-[1.4px]  `}
                 >
                   <FaRegEdit size={20} />
-                </div>
+                </button>
               </div>
               {/* -------  Description -------- */}
               <div className="project-description capitalize text-xl">
@@ -66,27 +81,47 @@ const SingleProject = () => {
               <div className="team-members flex items-center gap-5">
                 {project?.team?.length > 0 ? (
                   project?.team?.map((member) => (
-                    <div className="member flex flex-col items-center gap-2">
+                    <div
+                      className="member relative flex flex-col items-center gap-2"
+                      key={`${member._id}-${member.username}`}
+                    >
                       <LazyLoadImage
                         effect="blur"
                         src={member.profilePicture}
                         alt={member.username}
                         width={30}
                         height={30}
-                        className="object-cover rounded-full"
+                        title={member.username}
+                        className="object-cover rounded-full cursor-pointer"
                       />
+                      {member?._id === user?._id && (
+                        <span className="absolute -bottom-8 font-semibold text-purple">
+                          You
+                        </span>
+                      )}
                     </div>
                   ))
                 ) : (
                   <div className="no-team">
-                    <div className="text-heading text-xl ">No team members</div>
+                    <div className="text-heading text-xl">No team members</div>
                   </div>
                 )}
-                <div className="add-member">
-                  <div className="cursor-pointer active:bg-indigo-100 transition-all duration-200  active:translate-y-[1px]  text-heading text-xl font-normal rounded-full p-2 bg-indigo-200">
-                    <FaPlus size={15} className="text-blue-500" />
-                  </div>
-                </div>
+                <button
+                  disabled={project?.userId?._id !== user?._id}
+                  title={
+                    project?.userId?._id !== user?._id
+                      ? "Only project owner can add members"
+                      : "Add members to the project"
+                  }
+                  className={`${
+                    project?.userId?._id !== user?._id
+                      ? "cursor-not-allowed text-gray-300 bg-gray-100 "
+                      : "hover:text-indigo-500 active:bg-indigo-100 cursor-pointer  bg-indigo-200"
+                  } transition-all duration-200  active:translate-y-[1px]  text-heading text-xl font-normal rounded-full p-2`}
+                  onClick={() => setEditProject(project)}
+                >
+                  <FaPlus size={15} className="" />
+                </button>
               </div>
             </div>
 
@@ -177,6 +212,15 @@ const SingleProject = () => {
                 setToggleCreateBoard={setToggleCreateBoard}
                 project={project}
                 setProject={setProject}
+              />
+            ) : null}
+            {editProject ? (
+              <EditProjectOverlay
+                project={project}
+                setProject={setProject}
+                editProject={editProject}
+                setEditProject={setEditProject}
+                setAllProjects={setAllProjects}
               />
             ) : null}
           </div>

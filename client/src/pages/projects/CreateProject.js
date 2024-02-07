@@ -87,7 +87,7 @@ const CreateProject = ({
                         value={values.title}
                         onChange={handleChange}
                         placeholder="Project name"
-                        className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        className="border border-gray-300 rounded-md px-4 py-3 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
                     <div className="flex flex-col gap-2">

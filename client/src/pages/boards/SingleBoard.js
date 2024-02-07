@@ -1,28 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  DragDropContext,
-  DroppableId,
-  Droppable,
-  Draggable,
-} from "react-beautiful-dnd";
-import {
-  FaCheck,
-  FaCross,
-  FaFlag,
-  FaPencilAlt,
-  FaPlus,
-  FaRegEdit,
-} from "react-icons/fa";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { FaPencilAlt, FaRegEdit } from "react-icons/fa";
 import { IoCheckmark, IoClose, IoFlag } from "react-icons/io5";
 
-import { FaRegFlag } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { badgeColors } from "../../App";
 import { AlignColumn, AlignRow, ThreeDots } from "../../components/svg";
-import { AiOutlineDelete, AiOutlineLoading3Quarters } from "react-icons/ai";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "react-toastify";
-import { CreateNewTask, DeleteTaskById } from "../../store/slices/TaskSlice";
+import {
+  AssignTaskToMember,
+  CreateNewTask,
+  DeleteTaskById,
+} from "../../store/slices/TaskSlice";
 import { getAllProjects } from "../../store/slices/projectSlice";
 import { UpdateTaskOrder } from "../../store/slices/boardSlice";
 import { CiCirclePlus } from "react-icons/ci";
@@ -35,23 +26,44 @@ import {
 } from "../../store/slices/columnSlice.js";
 import EditTask from "./tasks/EditTask.js";
 import ColumnLimitOverlay from "./columns/ColumnLimitOverlay.js";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import { useUser } from "../../Context/userContext.js";
+import EditBoardOverlay from "./EditBoardOverlay.js";
 
 const SingleBoard = () => {
   const inputRef = useRef();
   const dispatch = useDispatch();
   const projectId = useParams()?.projectId;
   const boardId = useParams()?.boardId;
+  const { user: myprofile } = useUser();
+
   // _______________ Get Projects ________________
-  const { projects } = useSelector((state) => state?.projects);
-  const { loading } = useSelector((state) => state?.task);
+  const { allProjects: projects } = useSelector((state) => state?.projects);
+  const { loading, assignLoading } = useSelector((state) => state?.task);
   const { loading: columnLoading } = useSelector((state) => state?.column);
 
+  // _______________ Project Owner Id ________________
+  const [projectOwnerId, setProjectOwnerId] = useState(null);
   // _______________ Board ________________
   const [board, setBoard] = useState();
+  const [toggleEditBoard, setToggleEditBoard] = useState(null);
+
+  //  ______________ Progres Bar ________________
+  const [progress, setProgress] = useState(0);
+
+  // _________ Members of all the tasks of this board ______
+  const [allTasksMembers, setAllTasksMembers] = useState([]);
 
   // ___________ Task Text Edit   ____________
   const [editTaskId, setEditTaskId] = useState(null);
   const [TaskToEdit, setTaskToEdit] = useState({});
+
+  // ________ Add Assignee to Task _______
+  const [toggleAddAssignee, setToggleAddAssignee] = useState(false);
+  const [taskId, setTaskId] = useState(null);
+  const [assignee, setAssignee] = useState({});
+  const [assigneeList, setAssigneeList] = useState([]);
+
   // ___________ Column Name Edit   ____________
   const [editColId, setEditColId] = useState(null);
   const [colInputOpen, setColInputOpen] = useState(false);
@@ -82,8 +94,48 @@ const SingleBoard = () => {
     const SingleBoard = projects
       ?.find((project) => project._id === projectId)
       ?.boards?.find((board) => board._id === boardId);
+    const projectOwnerId = projects?.find(
+      (project) => project?._id === projectId
+    )?.userId?._id;
+    setProjectOwnerId(projectOwnerId || "");
+    const projectTeam = projects?.find(
+      (project) => project?._id === projectId
+    )?.team;
+    // project team members
+
+    setAssigneeList(projectTeam);
     setBoard(SingleBoard);
   }, [boardId, projects]);
+
+  //  _______________ Focus on input ________________
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [inputOpen, inputOpenId]);
+  useEffect(() => {
+    const alltasksFlat = board?.columns?.map((col) => col.tasks).flat();
+
+    const allmembers = alltasksFlat
+      ?.map((task) => task.assignedTo)
+      .filter((member) => member !== null);
+    setAllTasksMembers(allmembers);
+    const totalNoOfTasks = alltasksFlat?.length;
+
+    const tasksInProgressColumn = board?.columns?.find((col) =>
+      col.name.toLowerCase().includes("progress")
+    ).tasks?.length;
+    const tasksInDoneColumns = board?.columns?.find((col) =>
+      col.name.toLowerCase().includes("done")
+    )?.tasks?.length;
+    const progress =
+      (tasksInDoneColumns / totalNoOfTasks) * 100 +
+      (tasksInProgressColumn / totalNoOfTasks) * 100 -
+      (tasksInDoneColumns && tasksInProgressColumn === totalNoOfTasks
+        ? 100
+        : 0);
+    setProgress(progress);
+  }, [board]);
 
   //  _____________ Toggle Create Task Input ________________
   const toggleCreateTask = (colId) => {
@@ -92,16 +144,21 @@ const SingleBoard = () => {
     setInputOpenId(colId);
   };
 
-  //  _______________ Focus on input ________________
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [inputOpen, inputOpenId]);
-
   //  _______________ Handle Create Task ________________
   const handleCreateTask = async (columnId) => {
     if (task.trim() === "") return toast.error("Task can't be empty");
+    setBoard({
+      ...board,
+      columns: board?.columns?.map((col) => {
+        if (col._id === columnId) {
+          return {
+            ...col,
+            tasks: [...col.tasks, { text: task }],
+          };
+        }
+        return col;
+      }),
+    });
     const data = await dispatch(CreateNewTask({ text: task, columnId }));
     if (data?.payload?.task) {
       setTask("");
@@ -125,6 +182,10 @@ const SingleBoard = () => {
 
   //  _______________ Handle Delete Column ________________
   const handleDeleteColumn = async (columnId) => {
+    if (board?.columns?.length === 1) {
+      toast.error("You can't delete the last column");
+      return;
+    }
     const data = await dispatch(
       DeleteColumnById({ columnId, boardId: board._id })
     );
@@ -295,6 +356,7 @@ const SingleBoard = () => {
     }
   };
 
+  // _______________ Handle Change Column Name  ________________
   const handleChangeColumnName = (columnId, oldColName) => {
     if (!newColName) return toast.error("Please enter a new column name");
     else if (newColName === oldColName) {
@@ -314,9 +376,50 @@ const SingleBoard = () => {
       });
     }
   };
+  // _______________ Handle Assign Task ________________
+  const handleAssignTask = async (member, currentTask, columnId) => {
+    if (currentTask?.assignedTo && currentTask?.assignedTo?._id === member._id)
+      return toast.error("Task is already assigned to this member");
+    setAssignee(member);
+    setAllTasksMembers({
+      ...allTasksMembers,
+      [currentTask._id]: member,
+    });
+    setBoard({
+      ...board,
+      columns: board?.columns?.map((col) => {
+        if (col._id === columnId) {
+          return {
+            ...col,
+            tasks: col.tasks.map((task) => {
+              if (task._id === currentTask._id) {
+                return {
+                  ...task,
+                  assignedTo: member,
+                };
+              }
+              return task;
+            }),
+          };
+        }
+        return col;
+      }),
+    });
+    const data = await dispatch(
+      AssignTaskToMember({
+        taskId: currentTask._id,
+        memberId: member._id,
+      })
+    );
+
+    if (data?.payload) {
+      setToggleAddAssignee(false);
+      dispatch(getAllProjects());
+    }
+  };
 
   return (
-    <div className="single-board m-10 mb-60">
+    <div className="single-board mt-10 mx-16  mb-60">
       <DragDropContext onDragEnd={handleDrag}>
         {/* ______ UPPER Board Info PART _______ */}
         <div className="flex flex-col gap-4 ">
@@ -352,12 +455,19 @@ const SingleBoard = () => {
             >
               {board?.status}
             </span>
-            <div
-              title="Edit board name"
-              className="edit-title ml-5 transition-all duration-200 hover:shadow-lg active:translate-y-[1.4px] cursor-pointer hover:text-indigo-500 "
+            <button
+              disabled={projectOwnerId !== myprofile?._id}
+              onClick={() => setToggleEditBoard(board ? board : null)}
+              title={projectOwnerId !== myprofile?._id ? "Not allowed" : "Edit"}
+              className={`${
+                projectOwnerId !== myprofile?._id
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer hover:text-indigo-500"
+              } ml-5 transition-all duration-200 hover:shadow-lg 
+              active:translate-y-[1.4px] `}
             >
               <FaRegEdit size={20} />
-            </div>
+            </button>
           </div>
           {/* _______ Board Creation Date _____ */}
           <div className="board-creation-date text-xl text-purple">
@@ -372,9 +482,64 @@ const SingleBoard = () => {
           <div className="board-description capitalize text-xl">
             {board?.description}
           </div>
+          {/* __________ Progress Bar _____________ */}
+          {/* <div className="progress-bar flex items-center my-10 gap-5">
+            <div className="progress-bar-container relative w-[85%] h-5 bg-gray-100 rounded-full">
+              <div
+                style={{ width: `${progress}%` }}
+                className={`progress-bar-fill  absolute h-full rounded-full ${
+                  progress < 30
+                    ? "bg-red-400"
+                    : progress < 60
+                    ? "bg-yellow-400"
+                    : "bg-green-400"
+                }`}
+              ></div>
+
+              <div className="progress-bar-text absolute top-0 left-0 w-full h-full flex justify-center items-center">
+                <span className="text-xl font-semibold text-heading">
+                  {progress.toFixed(2)}%&nbsp;
+                </span>
+
+                <span className="text-xl font-semibold text-heading">
+                  {progress < 30
+                    ? "Not Good"
+                    : progress < 60
+                    ? "Average"
+                    : "Good"}
+                </span>
+
+                <span className="text-xl font-semibold ">
+                  {progress < 30 ? "🔴" : progress < 60 ? "🟡" : "🟢"}
+                </span>
+              </div>
+            </div>
+          </div> */}
           <div className="others flex justify-between items-center">
             <div className="team-members text-xl">
-              <span className="font-semibold text-purple">Team:</span> 0 members
+              <div className="no-team flex gap-5 items-center">
+                <span className="font-semibold">Team: </span>
+                {allTasksMembers?.length > 0 ? (
+                  <div className="flex gap-2">
+                    {allTasksMembers?.map((member, index) => {
+                      return (
+                        <LazyLoadImage
+                          key={`${index}-${member?._id}`}
+                          src={member?.profilePicture}
+                          effect="blur"
+                          title={member?.email}
+                          alt="Profile Picture"
+                          className="rounded-full border-2"
+                          width={30}
+                          height={30}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">No team members</span>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-32 items-center">
@@ -428,14 +593,14 @@ const SingleBoard = () => {
               {...provided.droppableProps}
               className={`${
                 columnAlignment == "row"
-                  ? "flex overflow-x-auto w-[118rem]"
+                  ? "flex overflow-x-auto w-[117.5rem]"
                   : "grid grid-cols-3 gap-10 w-fit"
-              } gap-10 my-10  `}
+              } gap-10 my-10  p-1`}
             >
               {board?.columns?.map((col, index) => {
                 return (
                   <Draggable
-                    key={col._id.toString()}
+                    key={`${col._id}-${index}`}
                     draggableId={col._id}
                     index={index}
                   >
@@ -444,11 +609,9 @@ const SingleBoard = () => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`cursor-default ${
-                          columnAlignment == "row"
-                            ? "min-w-[30rem]"
-                            : "w-[30rem]"
-                        } shadow-lg rounded-md px-5 py-6 flex flex-col gap-2`}
+                        className={`cursor-default h-fit ${
+                          columnAlignment == "row" ? "w-[30rem]" : "w-[30rem]"
+                        } shadow-lg shadow-indigo-100 rounded-md px-5 py-6 flex flex-col gap-2`}
                       >
                         {/* _____ Column Header Part ____ */}
                         <div
@@ -585,7 +748,7 @@ const SingleBoard = () => {
                         >
                           <Droppable
                             droppableId={col.name}
-                            key={col._id}
+                            key={`${col._id}-${index}-${col.name}`}
                             type="task"
                           >
                             {(provided) => (
@@ -598,8 +761,8 @@ const SingleBoard = () => {
                                   return (
                                     // _________ TASK _____________
                                     <Draggable
-                                      key={task._id}
-                                      draggableId={task?._id?.toString()}
+                                      key={`${task._id}-${index}-${index * 2}`}
+                                      draggableId={task?._id}
                                       index={index}
                                     >
                                       {(provided) => (
@@ -610,11 +773,10 @@ const SingleBoard = () => {
                                           onMouseLeave={() => {
                                             !isOpen && setOpenId(null);
                                           }}
-                                          key={task._id}
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
                                           {...provided.dragHandleProps}
-                                          className={`task cursor-default border-2 rounded-lg border-indigo-100 p-5 flex flex-col gap-4 ${
+                                          className={`task cursor-default border-2 rounded-lg border-indigo-100 px-4 py-1 flex flex-col gap-4 ${
                                             task?.flagged
                                               ? "bg-yellow-100"
                                               : "bg-white"
@@ -673,11 +835,21 @@ const SingleBoard = () => {
                                               >
                                                 {col.name}
                                               </span>
+
+                                              {projectOwnerId ===
+                                                myprofile?._id &&
+                                                task?.createdBy !==
+                                                  myprofile?._id && (
+                                                  <span className="bg-yellow-100 text-yellow-600 ring-1 ring-yellow-700">
+                                                    Issue
+                                                  </span>
+                                                )}
+
                                               {task?.labels?.map(
                                                 (label, index) => {
                                                   return (
                                                     <span
-                                                      key={index}
+                                                      key={`${label}-${index}`}
                                                       className={`inline-flex items-center rounded-md  px-2 py-1 text-sm capitalize font-medium text-purple border-[.5px] border-gray-200`}
                                                     >
                                                       {label}
@@ -692,6 +864,9 @@ const SingleBoard = () => {
                                                 <TaskEditorTool
                                                   handleDeleteTask={
                                                     handleDeleteTask
+                                                  }
+                                                  projectOwnerId={
+                                                    projectOwnerId
                                                   }
                                                   setTaskToEdit={setTaskToEdit}
                                                   isOpen={isOpen}
@@ -712,16 +887,174 @@ const SingleBoard = () => {
                                             {task.text}
                                           </div>
                                           {/* _______ Extras ______ */}
-                                          <div className="extras justify-between">
-                                            <div className="team"></div>
-                                            {task?.flagged && (
+                                          <div className="extras flex justify-end">
+                                            <div className="flex gap-5 items-center">
+                                              {task?.flagged && (
+                                                <div
+                                                  className="flagged justify-end flex cursor-pointer"
+                                                  title="flagged"
+                                                >
+                                                  <IoFlag
+                                                    size={12}
+                                                    color="red"
+                                                  />
+                                                </div>
+                                              )}
+                                              {/* _______________ Task Assigning _____________ */}
                                               <div
-                                                className="flagged justify-end flex cursor-pointer"
-                                                title="flagged"
+                                                className="assign-task relative cursor-pointer"
+                                                onClick={() => {
+                                                  setToggleAddAssignee(
+                                                    !toggleAddAssignee
+                                                  );
+                                                  setTaskId(task._id);
+                                                }}
                                               >
-                                                <IoFlag size={12} color="red" />
+                                                {task?.assignedTo?._id ? (
+                                                  <LazyLoadImage
+                                                    src={
+                                                      task?.assignedTo
+                                                        ?.profilePicture
+                                                    }
+                                                    effect="blur"
+                                                    title={`Assigned to ${task?.assignedTo?.email}`}
+                                                    alt="Profile Picture"
+                                                    className="rounded-full border-2"
+                                                    width={30}
+                                                    height={30}
+                                                  />
+                                                ) : (
+                                                  <span
+                                                    title="Unassigned"
+                                                    className="cursor-pointer flex gap-2 items-center"
+                                                  >
+                                                    {assignLoading &&
+                                                      taskId === task._id && (
+                                                        <AiOutlineLoading3Quarters
+                                                          className="animate-spin mb-2 text-gray-400"
+                                                          size={16}
+                                                        />
+                                                      )}
+                                                    <svg
+                                                      xmlns="http://www.w3.org/2000/svg"
+                                                      viewBox="0 0 64 80"
+                                                      x="0px"
+                                                      width={27}
+                                                      y="0px"
+                                                      fill="#525d70"
+                                                    >
+                                                      <path d="M32,5A27,27,0,0,0,12.5,50.65c.47.51,1,1,1.5,1.46a26.94,26.94,0,0,0,36,0q.81-.7,1.53-1.47A27,27,0,0,0,32,5ZM50.78,48.59C47.62,39.69,40.24,33.83,32,33.83S16.34,39.72,13.21,48.58a25.07,25.07,0,1,1,37.57,0Z" />
+                                                      <path d="M32,10.75a9.84,9.84,0,1,0,9.84,9.83A9.84,9.84,0,0,0,32,10.75Z" />
+                                                    </svg>
+                                                  </span>
+                                                )}
+                                                {toggleAddAssignee &&
+                                                  taskId === task._id && (
+                                                    <>
+                                                      <div className="absolute border-l-2 border-t-2 border-gray-200 drop-shadow-lg bg-white w-5 h-10 right-[1.15rem] top-11 rotate-45"></div>
+                                                      <div className="absolute z-50 drop-shadow-xl top-14 right-0 w-[20rem] border-2 border-gray-100   overflow-y-hidden bg-white p-3 rounded-lg ">
+                                                        <div className="flex flex-col gap-2 h-[10rem] py-2 overflow-y-auto assignee-list-scroll">
+                                                          {/* Make it unassigned  */}
+                                                          {task?.assignedTo
+                                                            ?._id ? (
+                                                            <div
+                                                              onClick={() =>
+                                                                handleAssignTask(
+                                                                  {},
+                                                                  task,
+                                                                  col._id
+                                                                )
+                                                              }
+                                                              title="Unassign"
+                                                              className="flex items-center gap-3 hover:bg-gray-100 p-1 rounded-md"
+                                                            >
+                                                              <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                viewBox="0 0 64 80"
+                                                                x="0px"
+                                                                width={27}
+                                                                y="0px"
+                                                                fill="#525d70"
+                                                              >
+                                                                <path d="M32,5A27,27,0,0,0,12.5,50.65c.47.51,1,1,1.5,1.46a26.94,26.94,0,0,0,36,0q.81-.7,1.53-1.47A27,27,0,0,0,32,5ZM50.78,48.59C47.62,39.69,40.24,33.83,32,33.83S16.34,39.72,13.21,48.58a25.07,25.07,0,1,1,37.57,0Z" />
+                                                                <path d="M32,10.75a9.84,9.84,0,1,0,9.84,9.83A9.84,9.84,0,0,0,32,10.75Z" />
+                                                              </svg>
+
+                                                              <span className="capitalize">
+                                                                Unassign
+                                                              </span>
+                                                            </div>
+                                                          ) : (
+                                                            // {/* assign to me */}
+                                                            <div
+                                                              onClick={() =>
+                                                                handleAssignTask(
+                                                                  myprofile,
+                                                                  task,
+                                                                  col._id
+                                                                )
+                                                              }
+                                                              title={`Assign to ${myprofile?.email}`}
+                                                              className="flex items-center gap-3 border-2 bg-gray-200 hover:bg-gray-100 p-1 rounded-md"
+                                                            >
+                                                              <LazyLoadImage
+                                                                src={
+                                                                  myprofile?.profilePicture ||
+                                                                  "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-vector-600nw-1725655669.jpg"
+                                                                }
+                                                                effect="blur"
+                                                                alt="Profile Picture"
+                                                                className="rounded-full "
+                                                                width={30}
+                                                                height={30}
+                                                              />
+                                                              <span className="capitalize">
+                                                                Assign to me
+                                                              </span>
+                                                            </div>
+                                                          )}
+                                                          {/* assign to team members */}
+                                                          {assigneeList?.map(
+                                                            (member, idx) => {
+                                                              return (
+                                                                <div
+                                                                  key={`${member._id}-${idx}-${task._id}`}
+                                                                  onClick={() =>
+                                                                    handleAssignTask(
+                                                                      member,
+                                                                      task,
+                                                                      col._id
+                                                                    )
+                                                                  }
+                                                                  title={`Assign to ${member?.email}`}
+                                                                  className="flex items-center gap-3 hover:bg-gray-100 p-1 rounded-md"
+                                                                >
+                                                                  <LazyLoadImage
+                                                                    src={
+                                                                      member?.profilePicture ||
+                                                                      "https://www.shutterstock.com/image-vector/default-avatar-profile-icon-vector-600nw-1725655669.jpg"
+                                                                    }
+                                                                    effect="blur"
+                                                                    alt="Profile Picture"
+                                                                    className="rounded-full"
+                                                                    width={30}
+                                                                    height={30}
+                                                                  />
+                                                                  <span className="capitalize">
+                                                                    {
+                                                                      member?.username
+                                                                    }
+                                                                  </span>
+                                                                </div>
+                                                              );
+                                                            }
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    </>
+                                                  )}
                                               </div>
-                                            )}
+                                            </div>
                                           </div>
                                         </div>
                                       )}
@@ -770,8 +1103,10 @@ const SingleBoard = () => {
                                     className="animate-spin"
                                     size={16}
                                   />
-                                ) : (
+                                ) : col?.createdBy === myprofile?._id ? (
                                   "Add Task"
+                                ) : (
+                                  "Create Issue"
                                 )}
                               </button>
                             )}
@@ -797,12 +1132,13 @@ const SingleBoard = () => {
                                         : "bg-green-100 text-green-600 border-green-200"
                                     }`
                                   : "bg-gray-100 text-gray-600 border-gray-200"
-                              }
-                       border-2 shadow-sm hover:shadow-md p-3 text-xl rounded-lg `}
+                              } border-2 shadow-sm hover:shadow-md p-3 text-xl rounded-lg `}
                             >
                               {inputOpen && inputOpenId == col._id
                                 ? "Cancel"
-                                : "Add Task"}
+                                : col?.createdBy === myprofile?._id
+                                ? "Add Task"
+                                : "Create Issue"}
                             </button>
                           </div>
                         </div>
@@ -836,6 +1172,14 @@ const SingleBoard = () => {
           <ColumnLimitOverlay
             colLimit={colLimit}
             setColLimit={setColLimit}
+            board={board}
+            setBoard={setBoard}
+          />
+        )}
+        {toggleEditBoard && (
+          <EditBoardOverlay
+            toggleEditBoard={toggleEditBoard}
+            setToggleEditBoard={setToggleEditBoard}
             board={board}
             setBoard={setBoard}
           />

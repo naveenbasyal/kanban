@@ -4,6 +4,8 @@ import {
   Routes,
   Route,
   useParams,
+  useLocation,
+  useNavigate,
 } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -13,11 +15,18 @@ import AllBoards from "./pages/boards/AllBoards";
 import SingleBoard from "./pages/boards/SingleBoard";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getAllProjects } from "./store/slices/projectSlice";
-import { useDispatch } from "react-redux";
+import {
+  getAllProjects,
+  getAllUserProjects,
+} from "./store/slices/projectSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { getToken } from "./utils/getToken";
 
+import ErrorPage from "./pages/ErrorPage";
+import MyProfile from "./pages/user/MyProfile";
+import { useUser } from "./Context/userContext";
 export const badgeColors = {
   gray: { bg: "bg-gray-50", text: "text-gray-600", ring: "ring-gray-500/10" },
   red: { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-600/10" },
@@ -51,60 +60,119 @@ export const badgeColors = {
 
 const App = () => {
   const dispatch = useDispatch();
+  const token = getToken();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useUser();
 
+  const [profile, setProfile] = useState({});
+
+  const [openProfile, setOpenProfile] = useState(false);
   const [allProjects, setAllProjects] = useState([]);
 
-  useEffect(() => {
-    const getData = async () => {
-      const data = await dispatch(getAllProjects());
+  const [allBoards, setAllBoards] = useState([]);
+  const [selectedBoard, setSelectedBoard] = useState([]);
 
-      data.payload && setAllProjects(data.payload);
-    };
-    getData();
-  }, []);
+  useEffect(() => {
+    setProfile(user);
+  }, [user]);
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      const getData = async () => {
+        // ____________ Global Projects _______________
+        const globalProjects = await dispatch(getAllProjects());
+
+        // ____________ My Personal Projects _______________
+        const myprojects = await dispatch(getAllUserProjects());
+
+        // ____________ Shared Projects with me _______________
+        const sharedProject = globalProjects?.payload.filter((project) => {
+          if (project?.team?.find((member) => member?._id === user?._id)) {
+            return { ...project };
+          }
+        });
+
+        const mergedProjects = [...myprojects?.payload, ...sharedProject];
+
+        setAllProjects(mergedProjects);
+      };
+      getData();
+    } else {
+      toast.error("Token not found, Please login again !!");
+    }
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    const allBoardsFlat = allProjects?.map((project) => project?.boards).flat();
+
+    setAllBoards(allBoardsFlat);
+  }, [allProjects]);
 
   return (
-    <Router>
-      <div className="flex h-screen">
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          className="z-50 text-2xl"
-          hideProgressBar={false}
-          newestOnTop={true}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
+    <div className="flex h-screen">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        className="z-50 text-2xl"
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      {isAuthenticated && (
+        <Sidebar
+          allBoards={allBoards}
+          setAllBoards={setAllBoards}
+          selectedBoard={selectedBoard}
+          setSelectedBoard={setSelectedBoard}
         />
-        <Sidebar />
-        <div className="flex flex-col flex-1">
-          <Navbar />
-          <div className="flex-1 overflow-y-auto">
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <AllProjects
-                    allProjects={allProjects}
-                    setAllProjects={setAllProjects}
-                  />
-                }
-              />
-              <Route path="/projects/:projectId" element={<SingleProject />} />
-              <Route path="/boards" element={<AllBoards />} />
-              <Route
-                path="/projects/:projectId/board/:boardId"
-                element={<SingleBoard />}
-              />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
-          </div>
+      )}
+      <div className="flex flex-col flex-1">
+        {isAuthenticated && (
+          <Navbar openProfile={openProfile} setOpenProfile={setOpenProfile} />
+        )}
+        {openProfile ? (
+          <MyProfile
+            openProfile={openProfile}
+            setOpenProfile={setOpenProfile}
+          />
+        ) : null}
+        <div className="flex-1 overflow-y-auto">
+          <Routes>
+            {isAuthenticated ? (
+              <>
+                <Route
+                  path="/"
+                  element={
+                    <AllProjects
+                      allProjects={allProjects}
+                      setAllProjects={setAllProjects}
+                    />
+                  }
+                />
+                <Route
+                  path="/projects/:projectId"
+                  element={<SingleProject setAllProjects={setAllProjects} />}
+                />
+                <Route path="/boards" element={<AllBoards />} />
+
+                <Route
+                  path="/projects/:projectId/board/:boardId"
+                  element={<SingleBoard />}
+                />
+              </>
+            ) : (
+              <Route path="*" element={<ErrorPage />} />
+            )}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Routes>
         </div>
       </div>
-    </Router>
+    </div>
   );
 };
 

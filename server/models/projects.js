@@ -14,9 +14,9 @@ const projectSchema = new mongoose.Schema(
       default: "",
     },
     lead: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    logo: {
-      type: String,
-      default: `https://picsum.photos/115/115?random=${new Date().getTime()}`,
+    starred: {
+      type: Boolean,
+      default: false,
     },
     team: [
       {

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-const SelectOptions = ({ items }) => {
+const SelectOptions = ({ selectedFilter, setSelectedFilter, items }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selected, setSelected] = useState(items[0] || "Unselected");
   const handleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -20,7 +19,7 @@ const SelectOptions = ({ items }) => {
         >
           <span className="flex items-center">
             <span className="ml-3  text-xl text-purple font-semibold block truncate">
-              {selected}
+              {selectedFilter}
             </span>
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 ml-3 flex items-center pr-2">
@@ -59,21 +58,21 @@ const SelectOptions = ({ items }) => {
               id="listbox-option-0"
               role="option"
               onClick={() => {
-                setSelected(item);
+                setSelectedFilter(item);
                 setIsDropdownOpen(true && false);
               }}
             >
               <div className="flex items-center">
                 <span
                   className={`${
-                    selected == item ? "font-semibold" : "font-normal"
+                    selectedFilter == item ? "font-semibold" : "font-normal"
                   } ml-3 block truncate text-xl `}
                 >
                   {item}
                 </span>
               </div>
 
-              {selected == item && (
+              {selectedFilter == item && (
                 <span className="text-indigo-600  absolute inset-y-0 right-0 flex items-center pr-4">
                   <svg
                     className="h-5 w-5 "

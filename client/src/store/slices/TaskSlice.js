@@ -13,7 +13,7 @@ export const CreateNewTask = createAsyncThunk(
         body: JSON.stringify({ text, columnId }),
       });
       const data = await res.json();
-      console.log("new Task", data);
+      
       return data;
     } catch (err) {
       console.log(err);
@@ -55,7 +55,29 @@ export const updateTaskById = createAsyncThunk(
         body: JSON.stringify({ taskId, text, labels, flagged }),
       });
       const data = await res.json();
-      console.log("Task Updated", data);
+      
+      return data;
+    } catch (err) {
+      console.log(err);
+      rejectWithValue(err);
+    }
+  }
+);
+export const AssignTaskToMember = createAsyncThunk(
+  "AssignTaskToMember",
+  async ({ taskId, memberId }, { rejectWithValue }) => {
+    
+    try {
+      const res = await fetch(`http://localhost:8000/api/task/assign-task`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ taskId, memberId }),
+      });
+      const data = await res.json();
+    
       return data;
     } catch (err) {
       console.log(err);
@@ -67,6 +89,7 @@ export const updateTaskById = createAsyncThunk(
 const initialState = {
   task: {},
   loading: false,
+  assignLoading: false,
   editLoading: false,
   error: null,
 };
@@ -106,6 +129,16 @@ const taskSlice = createSlice({
     });
     builder.addCase(updateTaskById.rejected, (state, action) => {
       state.editLoading = false;
+      state.error = action.payload;
+    });
+    builder.addCase(AssignTaskToMember.pending, (state, action) => {
+      state.assignLoading = true;
+    });
+    builder.addCase(AssignTaskToMember.fulfilled, (state, action) => {
+      state.assignLoading = false;
+    });
+    builder.addCase(AssignTaskToMember.rejected, (state, action) => {
+      state.assignLoading = false;
       state.error = action.payload;
     });
   },

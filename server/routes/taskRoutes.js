@@ -1,11 +1,11 @@
 const router = require("express").Router();
-const { createTask, deleteTask, addLabel, deleteLabel,  updateTask, assignedTask } = require("../controllers/task");
+const { createTask, deleteTask, addLabel, deleteLabel,  updateTask, assignTask } = require("../controllers/task");
 const verifyToken = require("../middlewares/verifyToken");
 
 router.post("/create", createTask);
 router.delete("/", deleteTask);
 router.patch("/updateTask", updateTask);
-router.post("/assignTask", assignedTask);
+router.patch("/assign-task", assignTask);
 
 
 // ------ label ------

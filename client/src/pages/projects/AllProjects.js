@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 // UI elements
@@ -13,45 +13,106 @@ import {
 import SelectOptions from "../../components/form/SelectOptions";
 import { toast } from "react-toastify";
 // Overlays
-import DeleteProjectOverlay from "../../components/overlays/DeleteProjectOverlay";
+import DeleteProjectOverlay from "./DeleteProjectOverlay";
 import CreateProject from "./CreateProject";
 // Slices
 import {
   deleteSingleProject,
   getAllProjects,
+  handleStarredProject,
 } from "../../store/slices/projectSlice";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
 //  Icons
 import { AiOutlineDelete } from "react-icons/ai";
-import { FaRegCopy, FaRegEdit } from "react-icons/fa";
+import { FaRegCopy, FaRegEdit, FaShare } from "react-icons/fa";
 import { HiCursorArrowRipple } from "react-icons/hi2";
 import LoadingScreen from "../../components/ui/LoadingScreen";
+import EditProjectOverlay from "./EditProjectOverlay";
+import { useUser } from "../../Context/userContext";
 
 const AllProjects = ({ allProjects, setAllProjects }) => {
   const dispatch = useDispatch();
+
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useUser();
+
+  const navigate = useNavigate();
   const { loading } = useSelector((state) => state?.projects);
 
   // ------ states for more info dropdown  --------
   const [isOpen, setIsOpen] = useState(false);
   const [openId, setOpenId] = useState(null);
   const [createProject, setCreateProject] = useState(false);
-  // ------ states for delete project overlay  --------
+
+  // ________ Edit  project overlay  _________
+  const [editProject, setEditProject] = useState(null);
+
+  // __________ Delete project overlay  ___________
   const [deleteProject, setDeleteProject] = useState(null);
 
-  const filters = ["All projects", "My projects", "Shared with me", "Archived"];
+  // _______ Filters for projects  _______
+  const [projects, setProjects] = useState([]);
+  const filters = ["All projects", "Starred", "Shared with me", "Archived"];
+  const [selectedFilter, setSelectedFilter] = useState(
+    filters[0] || "Unselected"
+  );
 
+  useEffect(() => {
+    if (selectedFilter === "All projects") {
+      setProjects(allProjects);
+    } else if (selectedFilter === "Starred") {
+      const starredFirst = [...allProjects].sort((a, b) => {
+        return b.starred - a.starred;
+      });
+      setProjects(starredFirst);
+    } else if (selectedFilter === "Shared with me") {
+      const sharedWithMe = [...allProjects].filter(
+        (project) => project?.userId?._id !== user._id
+      );
+      console.log("Allprojects", allProjects);
+      console.log("shared with me", sharedWithMe);
+      setProjects(sharedWithMe);
+    } else {
+      setProjects(allProjects);
+    }
+  }, [selectedFilter, allProjects]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else {
+      dispatch(getAllProjects());
+      navigate("/");
+    }
+  }, [isAuthenticated]);
+
+  // _______ Delete project by id  _______
   const deleteProjectById = async () => {
     const data = await dispatch(deleteSingleProject(deleteProject?._id));
 
     if (data?.payload) {
-      toast.success(data.payload.message);
+      console.log(data);
+      toast.info(data?.payload?.message);
       const filteredProjects = allProjects.filter(
         (project) => project._id != deleteProject._id
       );
       setAllProjects(filteredProjects);
       setDeleteProject(null);
+      dispatch(getAllProjects());
     }
+  };
+
+  const handleStarred = (projectId) => {
+    const projects = allProjects;
+    const updatedProjects = projects.map((project) => {
+      if (project._id === projectId) {
+        return { ...project, starred: !project.starred };
+      }
+      return project;
+    });
+    setAllProjects(updatedProjects);
+    dispatch(handleStarredProject({ projectId }));
   };
 
   return (
@@ -86,7 +147,11 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                   <SearchIcon />
                 </span>
               </div>
-              <SelectOptions items={filters} />
+              <SelectOptions
+                items={filters}
+                selectedFilter={selectedFilter}
+                setSelectedFilter={setSelectedFilter}
+              />
             </div>
           </div>
 
@@ -102,6 +167,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                 <table className="table text-xl ">
                   <thead>
                     <tr className="text-xl">
+                      <th></th>
                       <th>Name</th>
                       <th>Description</th>
                       <th>Lead</th>
@@ -112,22 +178,49 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
 
                   <tbody>
                     {!allProjects?.message &&
-                      allProjects?.map((item) => {
+                      projects?.map((item, idx) => {
                         return (
-                          <tr className="hover:bg-gray-100" key={item?._id}>
+                          <tr
+                            className="hover:bg-gray-100"
+                            key={`${idx * item._id}-${item?._id}`}
+                          >
+                            <td>
+                              {item?.userId?._id !== user._id ? (
+                                <FaShare
+                                  title={`Shared by ${item?.userId?.username}`}
+                                  size={20}
+                                  className="text-gray-400 cursor-pointer"
+                                />
+                              ) : (
+                                <span
+                                  className="cursor-pointer"
+                                  title="mark starred"
+                                  onClick={() => handleStarred(item._id)}
+                                >
+                                  <svg
+                                    height="16"
+                                    width="17"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 47.94 47.94"
+                                  >
+                                    <path
+                                      className={`${
+                                        item?.starred
+                                          ? "fill-yellow-400"
+                                          : "fill-white"
+                                      }`}
+                                      stroke="#000"
+                                      d="M26.285,2.486l5.407,10.956c0.376,0.762,1.103,1.29,1.944,1.412l12.091,1.757c2.118,0.308,2.963,2.91,1.431,4.403l-8.749,8.528c-0.608,0.593-0.886,1.448-0.742,2.285l2.065,12.042c0.362,2.109-1.852,3.717-3.746,2.722l-10.814-5.685c-0.752-0.395-1.651-0.395-2.403,0l-10.814,5.685 c-1.894,0.996-4.108-0.613-3.746-2.722l2.065-12.042c0.144-0.837-0.134-1.692-0.742-2.285l-8.749-8.528 c-1.532-1.494-0.687-4.096,1.431-4.403l12.091-1.757c0.841-0.122,1.568-0.65,1.944-1.412l5.407-10.956C22.602,0.567,25.338,0.567,26.285,2.486z"
+                                    />
+                                  </svg>
+                                </span>
+                              )}
+                            </td>
                             <td>
                               <Link
                                 to={`/projects/${item?._id}`}
                                 className="text-blue-500 flex items-center gap-5"
                               >
-                                <LazyLoadImage
-                                  alt="project logo"
-                                  width={30}
-                                  height={30}
-                                  effect="blur"
-                                  className="rounded-box border"
-                                  src={item?.logo}
-                                />
                                 {item?.title}
                               </Link>
                             </td>
@@ -144,10 +237,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                 : "No description"}
                             </td>
                             <td>
-                              <Link
-                                to={`/user/${item?.userId?._id}`}
-                                className="flex items-center gap-4 text-blue-500"
-                              >
+                              <Link className="flex items-center gap-4 text-blue-500">
                                 <LazyLoadImage
                                   effect="blur"
                                   alt="project logo"
@@ -161,21 +251,41 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                             </td>
                             <td>
                               <div className="flex -space-x-1 overflow-hidden">
-                                {item?.team?.map((member, id) => (
-                                  <LazyLoadImage
-                                    key={id}
-                                    alt="member"
-                                    effect="blur"
-                                    className="inline-block h-8 w-8 rounded-full ring-2 ring-white"
-                                    src={member?.profilePicture}
-                                  />
-                                ))}
-                                {!item?.team?.length && (
-                                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100">
-                                    <span className="text-gray-400 text-xl font-semibold">
-                                      {item?.team?.length}
+                                {item.team.length === 0 && (
+                                  <span className="text-gray-400 text-xl">
+                                    No team members
+                                  </span>
+                                )}
+                                {item?.team?.length > 3 ? (
+                                  <div className="flex items-center gap-2">
+                                    {item?.team
+                                      ?.slice(0, 3)
+                                      .map((member, id) => (
+                                        <LazyLoadImage
+                                          key={`${id}-${member._id}-${id}`}
+                                          alt="member"
+                                          effect="blur"
+                                          className="inline-block h-8 w-8 rounded-full ring-2 ring-white"
+                                          src={member?.profilePicture}
+                                        />
+                                      ))}
+                                    <span className="text-red-400 text-xl">
+                                      +{item.team.length - 3} more
                                     </span>
                                   </div>
+                                ) : (
+                                  item?.team?.length <= 3 &&
+                                  item?.team?.map((member, id) => (
+                                    <LazyLoadImage
+                                      key={`${id}-${member._id}-${
+                                        id * member._id
+                                      }`}
+                                      alt="member"
+                                      effect="blur"
+                                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white"
+                                      src={member?.profilePicture}
+                                    />
+                                  ))
                                 )}
                               </div>
                             </td>
@@ -222,6 +332,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                   tabIndex="-1"
                                 >
                                   <div
+                                    aria-disabled="true"
                                     className="py-3 flex flex-col gap-2"
                                     role="none"
                                   >
@@ -235,18 +346,23 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                       <HiCursorArrowRipple size={16} /> Open
                                       project
                                     </Link>
-                                    <span
+                                    <button
+                                      disabled={item?.userId?._id !== user._id}
                                       onClick={() => {
-                                        setDeleteProject(item);
+                                        setEditProject(item);
                                         setIsOpen(false);
                                       }}
-                                      className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+                                      className={`flex gap-3 ${
+                                        item?.userId?._id !== user._id
+                                          ? "text-gray-300 cursor-not-allowed bg-gray-100"
+                                          : "hover:text-indigo-500 text-gray-700 hover:bg-gray-100"
+                                      }  text-gray-700  items-center px-4 py-2 text-xl `}
                                       role="menuitem"
                                       tabIndex="-1"
                                       id="menu-item-0"
                                     >
                                       <FaRegEdit size={16} /> Edit
-                                    </span>
+                                    </button>
                                     <span
                                       onClick={() => {
                                         navigator.clipboard.writeText(item._id);
@@ -262,19 +378,23 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                     >
                                       <FaRegCopy size={16} /> Copy project id
                                     </span>
-                                    <span
+                                    <button
                                       onClick={() => {
                                         setDeleteProject(item);
                                         setIsOpen(false);
                                       }}
-                                      className="text-red-500 flex items-center gap-3 px-4 py-2 text-xl hover:bg-gray-100"
+                                      className={`${
+                                        item?.userId?._id !== user._id
+                                          ? "text-gray-300 cursor-not-allowed bg-gray-100"
+                                          : " text-red-600 hover:bg-gray-100"
+                                      } flex items-center gap-3 px-4 py-2 text-xl hover:bg-gray-100`}
                                       role="menuitem"
                                       tabIndex="-1"
                                       id="menu-item-0"
                                     >
                                       <AiOutlineDelete size={16} />
                                       Delete project
-                                    </span>
+                                    </button>
                                   </div>
                                 </div>
                               </div>
@@ -293,6 +413,14 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
               setAllProjects={setAllProjects}
               createProject={createProject}
               setCreateProject={setCreateProject}
+            />
+          ) : null}
+          {editProject ? (
+            <EditProjectOverlay
+              allProjects={allProjects}
+              setAllProjects={setAllProjects}
+              editProject={editProject}
+              setEditProject={setEditProject}
             />
           ) : null}
           {deleteProject ? (

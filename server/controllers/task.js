@@ -1,4 +1,5 @@
 const { Column, Task } = require("../models/board");
+const User = require("../models/user");
 
 const createTask = async (req, res) => {
   const { text, columnId } = req.body;
@@ -52,7 +53,7 @@ const deleteTask = async (req, res) => {
 const updateTask = async (req, res) => {
   const { taskId, text, labels, flagged } = req.body;
 
-  console.log(text, labels, flagged, taskId);
+  
   try {
     const task = await Task.findById(taskId);
     const taskUpdated = await Task.findByIdAndUpdate(
@@ -122,7 +123,7 @@ const deleteLabel = async (req, res) => {
       );
 
       await task.save();
-      console.log(task.labels);
+      
       return res.status(200).json({ task });
     } else {
       return res.status(404).json({ message: "Task not found" });
@@ -133,32 +134,24 @@ const deleteLabel = async (req, res) => {
   }
 };
 
-const assignedTask = async (req, res) => {
-  const { id, userIds } = req.body;
-  // userIds is an aray of ids
-  try {
-    const task = await Task.findById(id).populate({
-      path: "assignedTo",
-      select: "picture",
-    });
-    if (task) {
-      // check if the user is already assigned to the task
-      const userExists = userIds.some((userId) => {
-        return task.assignedTo.some((user) => {
-          return user._id.toString() === userId.toString();
-        });
-      });
+const assignTask = async (req, res) => {
+  const { taskId, memberId } = req.body;
+  // each task is gonna have only 1 member assigned to it
 
-      if (userExists) {
-        return res
-          .status(400)
-          .json({ message: `User already assigned to the task` });
-      }
-      userIds.map((userId) => task.assignedTo.push(userId));
+  try {
+    const userExist = User.findById(memberId);
+    if (userExist) {
+      const task = await Task.findByIdAndUpdate(
+        taskId,
+        {
+          assignedTo: memberId ? memberId : null,
+        },
+        { new: true }
+      );
       await task.save();
-      return res.status(200).json({ task });
+      return res.status(200).json(task);
     } else {
-      return res.status(404).json({ message: "Task not found" });
+      return res.status(404).json({ message: "User not found" });
     }
   } catch (err) {
     console.log(err);
@@ -171,5 +164,5 @@ module.exports = {
   addLabel,
   deleteLabel,
   updateTask,
-  assignedTask,
+  assignTask,
 };

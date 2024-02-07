@@ -1,4 +1,4 @@
-const { Board, Column } = require("../models/board");
+const { Board, Column, Task } = require("../models/board");
 const Project = require("../models/projects");
 const User = require("../models/user");
 
@@ -26,7 +26,7 @@ const createProject = async (req, res) => {
   }
 };
 
-const getAllProjects = async (req, res) => {
+const getAllUserProjects = async (req, res) => {
   const userId = req.user?.id;
 
   try {
@@ -34,6 +34,7 @@ const getAllProjects = async (req, res) => {
       .populate({
         path: "userId",
       })
+      .populate("team")
       .populate({
         path: "boards",
         populate: {
@@ -44,12 +45,37 @@ const getAllProjects = async (req, res) => {
 
             populate: {
               path: "assignedTo",
-              select: "email",
             },
           },
         },
       });
 
+    res.status(200).json(projects);
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+const getAllProjects = async (req, res) => {
+  try {
+    const projects = await Project.find()
+      .populate({
+        path: "userId",
+      })
+      .populate("team")
+      .populate({
+        path: "boards",
+        populate: {
+          path: "columns",
+
+          populate: {
+            path: "tasks",
+
+            populate: {
+              path: "assignedTo",
+            },
+          },
+        },
+      });
     res.status(200).json(projects);
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
@@ -67,7 +93,7 @@ const deleteProject = async (req, res) => {
 
     if (project) {
       //now we have to check if any board is linked to this projectId
-      if (project.userId.toString() !== userId.toString()) {
+      if (project?.userId?.toString() !== userId.toString()) {
         return res
           .status(401)
           .json({ message: "You are not authorized to delete this project" });
@@ -77,9 +103,13 @@ const deleteProject = async (req, res) => {
         await Promise.all(
           board.map(async (board) => {
             board.columns.map(async (column) => {
-              await Column.findByIdAndDelete(column._id);
+              // delete the tasks linked to the column
+
+              await Task.deleteMany({ columnId: column._id });
+              // delete the column
+              await Column.deleteMany(column._id);
             });
-            await Board.findByIdAndDelete(board._id);
+            await Board.deleteMany(board._id);
           })
         );
       }
@@ -103,16 +133,18 @@ const deleteProject = async (req, res) => {
   }
 };
 
-const updateProject = async (req, res) => {
-  const { id } = req.params;
-  const { title, description } = req.body;
+const updateProjectBasic = async (req, res) => {
+  const { projectId, title, description, team } = req.body;
+
   try {
     const project = await Project.findByIdAndUpdate(
-      id,
-      { title, description },
+      projectId,
+      { title, description, team: team.map((member) => member) },
+
       { new: true }
     );
-    res.status(200).json(project);
+
+    res.status(200).json({ message: "Project updated successfully", project });
   } catch (error) {
     res.status(500).json({ message: "Something went wrong" });
   }
@@ -122,19 +154,21 @@ const getSingleProject = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const project = await Project.findById(id).populate({
-      path: "boards",
-      populate: {
-        path: "columns",
+    const project = await Project.findById(id)
+      .populate("team")
+      .populate({
+        path: "boards",
         populate: {
-          path: "tasks",
+          path: "columns",
           populate: {
-            path: "assignedTo",
-            select: "email",
+            path: "tasks",
+            populate: {
+              path: "assignedTo",
+              select: "email",
+            },
           },
         },
-      },
-    });
+      });
 
     return res.status(200).json(project);
   } catch (error) {
@@ -143,10 +177,31 @@ const getSingleProject = async (req, res) => {
   }
 };
 
+const handleStarredProject = async (req, res) => {
+  const { projectId } = req.body;
+  const userId = req.user?.id;
+
+  try {
+    const project = await Project.findById(projectId);
+    if (project?.userId?.toString() !== userId?.toString()) {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to star this project" });
+    }
+    project.starred = !project.starred;
+    await project.save();
+    res.status(200).json({ message: "Project starred successfully", project });
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
 module.exports = {
   createProject,
+  getAllUserProjects,
   getAllProjects,
   deleteProject,
-  updateProject,
+  handleStarredProject,
   getSingleProject,
+  updateProjectBasic,
 };

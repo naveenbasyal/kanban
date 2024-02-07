@@ -28,7 +28,6 @@ const createBoard = async (req, res) => {
       });
       await newColumn.save();
       board.columns.push(newColumn._id);
-      console.log("New column--->", defaultColumns[i], newColumn._id);
     }
 
     await board.save();
@@ -67,7 +66,6 @@ const deleteBoard = async (req, res) => {
       //now we delte the columns linked to the board
       const columnIds = await Column.find({ boardId: id });
 
-      console.log("columnIds", columnIds);
       for (let i = 0; i < columnIds.length; i++) {
         await Task.deleteMany({ columnId: columnIds[i]._id });
       }
@@ -97,32 +95,25 @@ const updateTaskOrder = async (req, res) => {
 
   try {
     if (sourceColumnId !== destinationColumnId) {
-      console.log("sourceColumnId", sourceColumnId);
-      console.log("destinationColumnId", destinationColumnId);
-      console.log("taskId", taskId);
-      console.log("sourceIndex", sourceIndex);
-      console.log("destinationIndex", destinationIndex);
-
       const sourceColumn = await Column.findById(sourceColumnId);
 
       const destinationColumn = await Column.findById(destinationColumnId);
-      console.log("sourceColumn", sourceColumn);
-      console.log("destinationColumn", destinationColumn);
+   
       if (destinationColumn) {
         // grabbing the task from source column
         const draggedTask = sourceColumn.tasks.find(
           (task) => task?._id.toString() === taskId
         );
-        console.log("draggedTask", draggedTask);
+        
         // removing the tasks from source column
         sourceColumn.tasks.splice(sourceIndex, 1);
         await sourceColumn.save();
-        console.log("sourceColumn after splice", sourceColumn);
+        
         // adding the task to destination column
         destinationColumn.tasks.splice(destinationIndex, 0, draggedTask);
         await destinationColumn.save();
 
-        console.log("destinationColumn spliced", destinationColumn);
+        
         // now we have to change the columnId of the task
         const task = await Task.findById(taskId);
         task.columnId = destinationColumnId;

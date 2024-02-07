@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateTaskById } from "../../store/slices/TaskSlice";
 import { getAllProjects } from "../../store/slices/projectSlice";
 import { useState } from "react";
+import { useUser } from "../../Context/userContext";
 
 export const ColumnEditorTool = ({
   isOpen,
@@ -18,6 +19,7 @@ export const ColumnEditorTool = ({
   handleDeleteColumn,
 }) => {
   const { loading: colLoading } = useSelector((state) => state?.column);
+  const { user } = useUser();
 
   return (
     <div className="relative inline-block text-left">
@@ -66,9 +68,15 @@ export const ColumnEditorTool = ({
             Set Limit
           </span>
 
-          <span
+          <button
+            disabled={col?.createdBy !== user?._id}
             onClick={() => handleDeleteColumn(col._id)}
-            className="text-red-500 flex items-center gap-3 px-4 py-2 text-xl hover:bg-gray-100"
+            className={`${
+              col?.createdBy !== user?._id
+                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                : "text-red-500 hover:bg-gray-100"
+            } 
+            flex items-center gap-3 px-4 py-2 text-xl `}
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"
@@ -79,7 +87,7 @@ export const ColumnEditorTool = ({
               <AiOutlineDelete size={16} />
             )}
             Delete column
-          </span>
+          </button>
         </div>
       </div>
     </div>
@@ -97,8 +105,10 @@ export const TaskEditorTool = ({
   setOpenId,
   loading,
   handleDeleteTask,
+  projectOwnerId,
 }) => {
   const dispatch = useDispatch();
+  const { user } = useUser();
   const { editLoading } = useSelector((state) => state?.task);
 
   return (
@@ -134,19 +144,25 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
         tabIndex="-1"
       >
         <div className="py-3 flex flex-col gap-2" role="none">
-          <span
+          <button
+            disabled={task?.createdBy !== user?._id}
             onClick={() => {
               setEditTaskId(task._id);
               setTaskToEdit(task);
               !editLoading && setIsOpen(false);
             }}
-            className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+            className={`${
+              task?.createdBy !== user?._id
+                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                : "text-gray-700 hover:text-indigo-500"
+            } flex gap-3  items-center px-4 py-2
+             text-xl hover:bg-gray-100`}
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"
           >
             <FaRegEdit size={16} /> Edit
-          </span>
+          </button>
           <span
             onClick={() => {
               dispatch(
@@ -173,9 +189,15 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
             {task.flagged ? "Remove Flag" : "Add Flag"}
           </span>
 
-          <span
+          <button
+            disabled={task?.createdBy !== user?._id}
             onClick={() => handleDeleteTask(task._id, col._id)}
-            className="text-red-500 flex items-center gap-3 px-4 py-2 text-xl hover:bg-gray-100"
+            className={`${
+              task?.createdBy !== user?._id
+                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                : "text-red-500"
+            }  flex items-center gap-3 px-4 py-2 text-xl
+             hover:bg-gray-100`}
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"
@@ -186,7 +208,7 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
               <AiOutlineDelete size={16} />
             )}
             Delete Task
-          </span>
+          </button>
         </div>
       </div>
     </div>

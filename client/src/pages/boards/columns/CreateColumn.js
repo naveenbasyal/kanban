@@ -80,19 +80,19 @@ const CreateColumn = ({
                   <div className="flex flex-col gap-10">
                     <div className="flex flex-col gap-2">
                       <label
-                        htmlFor="board-name"
+                        htmlFor="column-name"
                         className="text-xl font-semibold text-heading"
                       >
                         Column name
                       </label>
                       <input
                         type="text"
-                        name="board-name"
-                        id="board-name"
+                        name="column-name"
+                        id="column-name"
                         value={columnName}
                         onChange={handleChange}
-                        placeholder="Board name"
-                        className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        placeholder="Column name"
+                        className="border border-gray-300 rounded-md px-4 py-4 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
                   </div>

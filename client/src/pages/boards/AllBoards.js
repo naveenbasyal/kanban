@@ -1,5 +1,5 @@
 import React, { memo, useState } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
+
 import {
   ActiveIndicator,
   FinishedIndicator,
@@ -15,11 +15,13 @@ import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import DeleteBoard from "./DeleteBoard";
 import EditBoardOverlay from "./EditBoardOverlay";
+import { useUser } from "../../Context/userContext";
 
 const AllBoards = ({ boards, project, setProject }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openId, setOpenId] = useState(null);
   const [boardId, setBoardId] = useState(null);
+  const { user } = useUser();
 
   // Edit Board
   const [toggleEditBoard, setToggleEditBoard] = useState(null);
@@ -28,11 +30,11 @@ const AllBoards = ({ boards, project, setProject }) => {
     <div className="all-boards">
       {/* ---------Boards Mappping---------- */}
       <div className="grid grid-cols-3 gap-10 my-10 w-fit">
-        {boards?.map((board) => {
+        {boards?.map((board, idx) => {
           return (
             <div
-              key={board._id}
-              className="w-[28rem] h-[16rem] shadow-board border-[1px] border-[#F2F2F2] rounded-md px-5 py-6 flex flex-col gap-2"
+              key={`${board._id}-${idx}-${board.title}`}
+              className="w-[28rem]  h-[16rem] shadow-board border-[1px] border-[#F2F2F2] rounded-md px-5 py-6 flex flex-col gap-3"
             >
               <div className="nav-section flex justify-between w-full items-center ">
                 {/* _______ Board Status _____ */}
@@ -138,18 +140,24 @@ const AllBoards = ({ boards, project, setProject }) => {
                         >
                           <HiCursorArrowRipple size={16} /> Open Board
                         </Link>
-                        <span
+                        <button
+                          disabled={board?.createdBy !== user?._id}
                           onClick={() => {
                             setToggleEditBoard(board);
                             setIsOpen(false);
                           }}
-                          className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+                          className={`flex gap-3 ${
+                            board?.createdBy !== user?._id
+                              ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                              : "hover:text-indigo-500 text-gray-700 hover:bg-gray-100"
+                          }  
+                           items-center px-4 py-2 text-xl `}
                           role="menuitem"
                           tabIndex="-1"
                           id="menu-item-0"
                         >
                           <FaRegEdit size={16} /> Edit
-                        </span>
+                        </button>
                         <span
                           onClick={() => {
                             navigator.clipboard.writeText(board._id);
@@ -163,19 +171,25 @@ const AllBoards = ({ boards, project, setProject }) => {
                         >
                           <FaRegCopy size={16} /> Copy board id
                         </span>
-                        <span
+                        <button
+                          disabled={board?.createdBy !== user?._id}
                           onClick={() => {
                             setBoardId(board._id);
                             setIsOpen(false);
                           }}
-                          className="text-red-500 flex items-center gap-3 px-4 py-2 text-xl hover:bg-gray-100"
+                          className={`${
+                            board?.createdBy !== user?._id
+                              ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                              : "text-red-500"
+                          } flex items-center gap-3 px-4 py-2 text-xl
+                           hover:bg-gray-100`}
                           role="menuitem"
                           tabIndex="-1"
                           id="menu-item-0"
                         >
                           <AiOutlineDelete size={16} />
                           Delete Board
-                        </span>
+                        </button>
                       </div>
                     </div>
                   </div>

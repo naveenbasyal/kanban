@@ -48,12 +48,11 @@ const taskSchema = new mongoose.Schema(
       default: false,
     },
 
-    assignedTo: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true }
 );

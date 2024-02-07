@@ -35,4 +35,4 @@ app.use("/api/user", userRoutes);
 app.use("/api/project", projectRoutes);
 app.use("/api/board", verifyToken, boardRoutes);
 app.use("/api/column", verifyToken, columnRoutes);
-app.use("/api/task", taskRoutes);
+app.use("/api/task", verifyToken, taskRoutes);

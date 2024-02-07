@@ -4,8 +4,10 @@ import userSlice from "./slices/userSlice";
 import boardSlice from "./slices/boardSlice";
 import taskSlice from "./slices/TaskSlice";
 import columnSlice from "./slices/columnSlice";
+import authSlice from "./slices/authSlice";
 const store = configureStore({
   reducer: {
+    auth: authSlice,
     projects: projectSlice,
     user: userSlice,
     board: boardSlice,
