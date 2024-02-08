@@ -18,7 +18,7 @@ const createColumn = async (req, res) => {
       // add this columnId to Board's collumn array
       board.columns.push(column._id);
       await board.save();
-      return res.status(201).json({ column });
+      return res.status(201).json(column);
     } else {
       return res.status(404).json({ message: "Board not found" });
     }
@@ -43,7 +43,9 @@ const deleteColumn = async (req, res) => {
       );
       //now we have to delete the tasks linked to the column
       await Task.deleteMany({ columnId: columnId });
-      return res.status(200).json({ message: "Column deleted successfully" });
+      return res
+        .status(200)
+        .json({ column, message: "Column deleted successfully" });
     } else {
       return res.status(404).json({ message: "Column not found" });
     }
@@ -69,7 +71,9 @@ const updateColumnOrder = async (req, res) => {
     await board.save();
     console.log("baord columns After", board.columns);
 
-    return res.status(200).json({ message: "Column order updated" });
+    return res
+      .status(200)
+      .json({ column: draggedColumn, message: "Column order updated" });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Something went wrong", err });
@@ -91,7 +95,7 @@ const changeColumnName = async (req, res) => {
       { new: true }
     );
     await column.save();
-    return res.status(200).json({ message: "Column name updated" });
+    return res.status(200).json({ column, message: "Column name updated" });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Something went wrong", err });
@@ -108,7 +112,7 @@ const UpdateColLimit = async (req, res) => {
       { new: true }
     );
     await column.save();
-    return res.status(200).json({ message: "Column limit updated" });
+    return res.status(200).json({ column, message: "Column limit updated" });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Something went wrong", err });
@@ -120,5 +124,5 @@ module.exports = {
   deleteColumn,
   updateColumnOrder,
   changeColumnName,
-  UpdateColLimit
+  UpdateColLimit,
 };

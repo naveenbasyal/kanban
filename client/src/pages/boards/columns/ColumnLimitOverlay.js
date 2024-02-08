@@ -9,6 +9,13 @@ import { toast } from "react-toastify";
 import { UpdateColLimit } from "../../../store/slices/columnSlice";
 import { getAllProjects } from "../../../store/slices/projectSlice";
 
+// __________ Socket io ___________
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
+
 const ColumnLimitOverlay = ({
   board,
   setBoard,
@@ -24,18 +31,26 @@ const ColumnLimitOverlay = ({
   });
 
   const handleUpdateLimit = async () => {
-    dispatch(UpdateColLimit({ columnId: _id, limit: values.limit }));
-    setColLimit(null);
-    setBoard({
-      ...board,
-      columns: board.columns.map((col) => {
-        if (col._id === _id) {
-          return { ...col, limit: values.limit };
-        }
-        return col;
-      }),
-    });
-    dispatch(getAllProjects());
+    const data = await dispatch(
+      UpdateColLimit({ columnId: _id, limit: values.limit })
+    );
+
+    if (data.payload?.column) {
+      socket.emit("columnLimitUpdated", data?.payload?.column);
+      setColLimit(null);
+      setBoard({
+        ...board,
+        columns: board.columns.map((col) => {
+          if (col._id === _id) {
+            return { ...col, limit: values.limit };
+          }
+          return col;
+        }),
+      });
+      dispatch(getAllProjects());
+    } else {
+      toast.error(data?.payload?.message);
+    }
   };
 
   return (

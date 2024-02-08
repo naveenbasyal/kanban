@@ -6,7 +6,17 @@ import { CreateNewBoard } from "../../store/slices/boardSlice";
 import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
-import { getAllProjects } from "../../store/slices/projectSlice";
+import {
+  getAllProjects,
+  getAllUserProjects,
+} from "../../store/slices/projectSlice";
+
+// __________ Socket io ___________
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 
 const CreateBoard = ({
   setToggleCreateBoard,
@@ -30,13 +40,14 @@ const CreateBoard = ({
 
     const data = await dispatch(CreateNewBoard({ values, projectId }));
 
-    if (data.payload) {
-      console.log("data->>", data.payload.finalBoard);
+    if (data.payload?.finalBoard) {
+      socket.emit("boardCreated", data.payload?.finalBoard);
       setToggleCreateBoard(false);
       dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
       setValues({ title: "", description: "" });
     } else {
-      toast.error("Something went wrong");
+      toast.error(data?.payload?.message);
     }
   };
 

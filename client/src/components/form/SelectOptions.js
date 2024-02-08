@@ -59,6 +59,7 @@ const SelectOptions = ({ selectedFilter, setSelectedFilter, items }) => {
               role="option"
               onClick={() => {
                 setSelectedFilter(item);
+                localStorage.setItem("selectedFilter", item);
                 setIsDropdownOpen(true && false);
               }}
             >

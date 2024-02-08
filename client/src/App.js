@@ -63,7 +63,9 @@ const App = () => {
   const token = getToken();
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { user } = useUser();
-
+  const { allProjects: globalProjects, projects: userProjects } = useSelector(
+    (state) => state.projects
+  );
   const [profile, setProfile] = useState({});
 
   const [openProfile, setOpenProfile] = useState(false);
@@ -97,14 +99,27 @@ const App = () => {
         setAllProjects(mergedProjects);
       };
       getData();
-    } else {
-      toast.error("Token not found, Please login again !!");
     }
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    const allBoardsFlat = allProjects?.map((project) => project?.boards).flat();
+    const globalData = [...globalProjects];
+    const userData = globalData?.filter(
+      (project) => project?.userId?._id === user?._id
+    );
+    const sharedProject = globalData?.filter((project) => {
+      if (project?.team?.find((member) => member?._id === user?._id)) {
+        return { ...project };
+      }
+    });
 
+    const mergedProjects = [...userData, ...sharedProject];
+
+    setAllProjects(mergedProjects);
+  }, [globalProjects]);
+
+  useEffect(() => {
+    const allBoardsFlat = allProjects?.map((project) => project?.boards).flat();
     setAllBoards(allBoardsFlat);
   }, [allProjects]);
 

@@ -141,14 +141,15 @@ const MyProfile = ({ openProfile, setOpenProfile }) => {
                             onClick={() => setToggleEdit(!toggleEdit)}
                             className="hover:bg-indigo-100 py-3 px-5 transition-colors duration-300 text-gray-500 cursor-pointer hover:text-gray-800 rounded-full flex items-center justify-center"
                           >
-                            <FaPencilAlt size={16} />
+                            <FaPencilAlt size={14} />
                           </span>
                         </div>
                       )}
                     </div>
 
-                    <p className="text-emerald-400 font-semibold  text-xl">
-                      Active
+                    <p className="text-gray-500 flex gap-2 font-semibold  text-xl">
+                      <span className="text-heading">Bio: </span>
+                      {user?.bio}
                     </p>
 
                     {/* __ Email ___ */}

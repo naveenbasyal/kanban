@@ -13,9 +13,25 @@ const Sidebar = ({
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleDropdown = () => {
+  const handleDropdown = (e) => {
+    e.stopPropagation();
     setIsDropdownOpen(!isDropdownOpen);
   };
+
+  // Closing the dropdown when clicked outside
+  useEffect(() => {
+    const handleCloseDropdown = (e) => {
+      if (e.target.id !== "dropdown") {
+        isDropdownOpen && setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleCloseDropdown);
+    return () => {
+      document.removeEventListener("click", handleCloseDropdown);
+    };
+  }, [isDropdownOpen]);
+
   const SidebarLabels = [
     {
       label: "Home",
@@ -160,6 +176,7 @@ const Sidebar = ({
             aria-haspopup="listbox"
             aria-expanded="true"
             aria-labelledby="listbox-label"
+            id="dropdown"
           >
             <span className="flex items-center">
               <svg

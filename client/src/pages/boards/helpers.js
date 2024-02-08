@@ -7,7 +7,11 @@ import { updateTaskById } from "../../store/slices/TaskSlice";
 import { getAllProjects } from "../../store/slices/projectSlice";
 import { useState } from "react";
 import { useUser } from "../../Context/userContext";
+import io from "socket.io-client";
 
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 export const ColumnEditorTool = ({
   isOpen,
   setColLimit,
@@ -17,31 +21,32 @@ export const ColumnEditorTool = ({
   setOpenId,
   loading,
   handleDeleteColumn,
+  projectOwnerId,
 }) => {
   const { loading: colLoading } = useSelector((state) => state?.column);
   const { user } = useUser();
 
   return (
     <div className="relative inline-block text-left">
-      <div>
-        <button
-          onClick={(e) => {
-            setIsOpen(!isOpen);
-            setOpenId(col._id);
-          }}
-          type="button"
-          className={`inline-flex ${
-            isOpen && openId == col._id
-              ? " bg-indigo-100"
-              : "bg-transparent text-gray-900 outline-none  "
-          } border-none w-full h-10 items-center justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
-          id="menu-button"
-          aria-expanded="true"
-          aria-haspopup="true"
-        >
-          <ThreeDots color={isOpen && openId == col._id ? "indigo" : "gray"} />
-        </button>
-      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+          setOpenId(col._id);
+        }}
+        type="button"
+        className={`inline-flex ${
+          isOpen && openId == col._id
+            ? " bg-indigo-100"
+            : "bg-transparent text-gray-900 outline-none  "
+        } border-none w-full h-10 items-center justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+        id="menu-button"
+        aria-expanded="true"
+        aria-haspopup="true"
+      >
+        <ThreeDots color={isOpen && openId == col._id ? "indigo" : "gray"} />
+      </button>
+
       <div
         className={`absolute ${
           isOpen && openId == col._id ? "block" : "hidden"
@@ -69,12 +74,20 @@ export const ColumnEditorTool = ({
           </span>
 
           <button
-            disabled={col?.createdBy !== user?._id}
+            disabled={
+              col?.createdBy !== user?._id && projectOwnerId !== user?._id
+                ? true
+                : (col?.createdBy === user?._id ||
+                    projectOwnerId === user?._id) &&
+                  false
+            }
             onClick={() => handleDeleteColumn(col._id)}
             className={`${
-              col?.createdBy !== user?._id
+              col?.createdBy !== user?._id && projectOwnerId !== user?._id
                 ? "cursor-not-allowed bg-gray-100 text-gray-300"
-                : "text-red-500 hover:bg-gray-100"
+                : (col?.createdBy === user?._id ||
+                    projectOwnerId === user?._id) &&
+                  "text-red-500 hover:bg-gray-100"
             } 
             flex items-center gap-3 px-4 py-2 text-xl `}
             role="menuitem"
@@ -111,11 +124,29 @@ export const TaskEditorTool = ({
   const { user } = useUser();
   const { editLoading } = useSelector((state) => state?.task);
 
+  const handleAddFlag = async () => {
+    const data = await dispatch(
+      updateTaskById({
+        taskId: task._id,
+        text: task.text,
+        labels: task.labels,
+        flagged: !task.flagged,
+      })
+    );
+    if (data?.payload?.updatedTask) {
+      socket.emit("taskFlagged", data?.payload?.updatedTask);
+
+      dispatch(getAllProjects());
+      setIsOpen(false);
+    }
+  };
+
   return (
     <div className="relative inline-block text-left">
       <div>
         <button
           onClick={(e) => {
+            e.stopPropagation();
             setIsOpen(!isOpen);
             setOpenId(task._id);
           }}
@@ -145,17 +176,25 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
       >
         <div className="py-3 flex flex-col gap-2" role="none">
           <button
-            disabled={task?.createdBy !== user?._id}
+            disabled={
+              task?.createdBy !== user?._id && projectOwnerId !== user?._id
+                ? true
+                : (task?.createdBy === user?._id ||
+                    projectOwnerId === user?._id) &&
+                  false
+            }
             onClick={() => {
               setEditTaskId(task._id);
               setTaskToEdit(task);
               !editLoading && setIsOpen(false);
             }}
             className={`${
-              task?.createdBy !== user?._id
+              task?.createdBy !== user?._id && projectOwnerId !== user?._id
                 ? "cursor-not-allowed bg-gray-100 text-gray-300"
-                : "text-gray-700 hover:text-indigo-500"
-            } flex gap-3  items-center px-4 py-2
+                : (task?.createdBy === user?._id ||
+                    projectOwnerId === user?._id) &&
+                  "text-gray-700 hover:text-indigo-500"
+            } flex gap-3  items-center px-4 py-2 
              text-xl hover:bg-gray-100`}
             role="menuitem"
             tabIndex="-1"
@@ -164,18 +203,7 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
             <FaRegEdit size={16} /> Edit
           </button>
           <span
-            onClick={() => {
-              dispatch(
-                updateTaskById({
-                  taskId: task._id,
-                  text: task.text,
-                  labels: task.labels,
-                  flagged: !task.flagged,
-                })
-              );
-              dispatch(getAllProjects());
-              setIsOpen(false);
-            }}
+            onClick={handleAddFlag}
             className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
             role="menuitem"
             tabIndex="-1"
@@ -190,12 +218,20 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
           </span>
 
           <button
-            disabled={task?.createdBy !== user?._id}
+            disabled={
+              task?.createdBy !== user?._id && projectOwnerId !== user?._id
+                ? true
+                : (task?.createdBy === user?._id ||
+                    projectOwnerId === user?._id) &&
+                  false
+            }
             onClick={() => handleDeleteTask(task._id, col._id)}
             className={`${
-              task?.createdBy !== user?._id
+              task?.createdBy !== user?._id && projectOwnerId !== user?._id
                 ? "cursor-not-allowed bg-gray-100 text-gray-300"
-                : "text-red-500"
+                : (task?.createdBy === user?._id ||
+                    projectOwnerId === user?._id) &&
+                  "text-red-500"
             }  flex items-center gap-3 px-4 py-2 text-xl
              hover:bg-gray-100`}
             role="menuitem"

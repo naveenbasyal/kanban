@@ -1,9 +1,15 @@
 import React, { useCallback } from "react";
 import { Fragment, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createNewProject } from "../../store/slices/projectSlice";
+import {
+  createNewProject,
+  getAllProjects,
+  getAllUserProjects,
+} from "../../store/slices/projectSlice";
 import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "react-toastify";
+
+
 
 const CreateProject = ({
   setCreateProject,
@@ -24,15 +30,16 @@ const CreateProject = ({
   const handleCreate = async () => {
     const data = await dispatch(createNewProject(values));
     if (data.payload._id) {
-      console.log("data->>", data.payload);
       setCreateProject(false);
       setAllProjects([...allProjects, data?.payload]);
       setValues({ title: "", description: "" });
+      dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
     } else {
       toast.error("Something went wrong");
     }
   };
-  console.log("Create Project Overlay Changed");
+
   const handleChange = useCallback((e) => {
     setValues({ ...values, title: e.target.value });
   }, []);
@@ -87,7 +94,7 @@ const CreateProject = ({
                         value={values.title}
                         onChange={handleChange}
                         placeholder="Project name"
-                        className="border border-gray-300 rounded-md px-4 py-3 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        className="border capitalize border-gray-300 rounded-md px-4 py-3 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
                     <div className="flex flex-col gap-2">

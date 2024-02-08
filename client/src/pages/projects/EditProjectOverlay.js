@@ -7,12 +7,22 @@ import { Dialog, Transition } from "@headlessui/react";
 import {
   UpdateProjectBasic,
   getAllProjects,
+  getAllUserProjects,
 } from "../../store/slices/projectSlice";
 import { FaRotate } from "react-icons/fa6";
 import { IoClose } from "react-icons/io5";
 import { getAllUsers } from "../../store/slices/userSlice";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { toast } from "react-toastify";
+import { useLocation } from "react-router-dom";
+import { MdInfoOutline } from "react-icons/md";
+
+// __________ Socket io ___________
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 
 const EditProjectOverlay = ({
   setEditProject,
@@ -23,7 +33,7 @@ const EditProjectOverlay = ({
 }) => {
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
-
+  const location = useLocation();
   const { editLoading } = useSelector((state) => state.projects);
   const { allusers } = useSelector((state) => state.user);
   const [allUsers, setAllUsers] = useState([]);
@@ -55,6 +65,28 @@ const EditProjectOverlay = ({
 
   const handleUpdateProject = async () => {
     const newTeam = Array.from(values.team.map((p) => p._id));
+    if (location.pathname.includes === "/projects") {
+      setProject({
+        ...project,
+        title: data?.payload?.project?.title,
+        description: data?.payload?.project?.description,
+        team: values.team,
+      });
+    } else {
+      setAllProjects((prev) => {
+        return prev.map((p) => {
+          if (p._id === _id) {
+            return {
+              ...p,
+              title: values.title,
+              description: values.description,
+              team: values.team,
+            };
+          }
+          return p;
+        });
+      });
+    }
 
     const data = await dispatch(
       UpdateProjectBasic({
@@ -64,18 +96,13 @@ const EditProjectOverlay = ({
         team: newTeam,
       })
     );
-    if (data?.payload) {
-      setProject({
-        ...project,
-        title: data?.payload?.project?.title,
-        description: data?.payload?.project?.description,
-        team: values.team,
-      });
-      const data1 = await dispatch(getAllProjects());
-      setAllProjects(data1?.payload);
+    if (data?.payload?.project) {
+      socket.emit("projectUpdated", data.payload?.project);
+      dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
       setEditProject(false);
       setValues({ title: "", description: "" });
-    }
+    } else toast.error(data?.payload?.message);
   };
 
   const handleDeletePerson = (person) => {
@@ -123,27 +150,27 @@ const EditProjectOverlay = ({
                     {/* _________Project Name __________ */}
                     <div className="flex flex-col gap-2">
                       <label
-                        htmlFor="project-name"
+                        htmlFor="name"
                         className="text-xl font-semibold text-heading"
                       >
                         Project name
                       </label>
                       <input
                         type="text"
-                        name="project-name"
-                        id="project-name"
+                        name="name"
+                        id="name"
                         value={values.title}
                         onChange={(e) =>
                           setValues({ ...values, title: e.target.value })
                         }
                         placeholder="Project name"
-                        className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        className="border border-gray-300 rounded-md px-4 py-4 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
                     {/* ________ Project Decription ________ */}
                     <div className="flex flex-col gap-2">
                       <label
-                        htmlFor="project-description"
+                        htmlFor="description"
                         className="text-xl font-semibold text-heading"
                       >
                         Project description
@@ -157,26 +184,41 @@ const EditProjectOverlay = ({
                         placeholder={
                           "Write a short description about your project"
                         }
-                        name="project-description"
-                        id="project-description"
-                        className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        name="description"
+                        id="description"
+                        className="border border-gray-300 rounded-md px-4 py-4 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
                     {/*  _________ Project Team _________ */}
 
                     <div className="flex flex-col gap-2">
-                      <div className="flex flex-col gap-4 relative">
-                        <label
-                          htmlFor="label"
-                          className="text-xl  font-semibold text-heading"
-                        >
-                          Team
-                        </label>
+                      <div className="flex flex-col gap-2 relative">
+                        <div className="flex gap-3 items-center">
+                          <label
+                            htmlFor="team"
+                            className="text-xl  font-semibold text-heading"
+                          >
+                            Team
+                          </label>
+                          <div
+                            title="Members added here will be available on boards to assign tasks to them."
+                            className="info cursor-pointer flex items-center"
+                          >
+                            <MdInfoOutline
+                              size={15}
+                              className="text-gray-500"
+                            />
+                          </div>
+                        </div>
                         {/* input to seach for all users */}
+                        <div className="info ml-2 text-gray-600">
+                          Members added here will be available on boards to
+                          assign tasks to them
+                        </div>
                         <input
                           type="text"
-                          name="label"
-                          id="label"
+                          name="team"
+                          id="team"
                           autoComplete="off"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}

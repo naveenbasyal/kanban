@@ -29,9 +29,9 @@ const createTask = async (req, res) => {
 
 const deleteTask = async (req, res) => {
   const { id, columnId } = req.body;
-
+  console.log("id", id, columnId);
   try {
-    const task = Task.findById(id);
+    const task = await Task.findById(id);
     if (task) {
       await Task.findByIdAndDelete(id);
 
@@ -40,7 +40,10 @@ const deleteTask = async (req, res) => {
         { $pull: { tasks: id } },
         { new: true }
       );
-      return res.status(200).json({ message: "Task deleted successfully" });
+      console.log("deleted", task);
+      return res
+        .status(200)
+        .json({ task: task, message: "Task deleted successfully" });
     } else {
       return res.status(404).json({ message: "Task not found" });
     }
@@ -53,7 +56,6 @@ const deleteTask = async (req, res) => {
 const updateTask = async (req, res) => {
   const { taskId, text, labels, flagged } = req.body;
 
-  
   try {
     const task = await Task.findById(taskId);
     const taskUpdated = await Task.findByIdAndUpdate(
@@ -123,7 +125,7 @@ const deleteLabel = async (req, res) => {
       );
 
       await task.save();
-      
+
       return res.status(200).json({ task });
     } else {
       return res.status(404).json({ message: "Task not found" });
@@ -139,7 +141,7 @@ const assignTask = async (req, res) => {
   // each task is gonna have only 1 member assigned to it
 
   try {
-    const userExist = User.findById(memberId);
+    const userExist = await User.findById(memberId);
     if (userExist) {
       const task = await Task.findByIdAndUpdate(
         taskId,
@@ -149,8 +151,22 @@ const assignTask = async (req, res) => {
         { new: true }
       );
       await task.save();
-      return res.status(200).json(task);
+
+      return res.status(200).json({ task, user: userExist });
     } else {
+      // make the task unassigned
+      if (taskId && !memberId) {
+        const task = await Task.findByIdAndUpdate(
+          taskId,
+          {
+            assignedTo: null,
+          },
+          { new: true }
+        );
+        await task.save();
+        return res.status(200).json({ unassigned: true });
+      }
+
       return res.status(404).json({ message: "User not found" });
     }
   } catch (err) {

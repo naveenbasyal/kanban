@@ -9,6 +9,13 @@ import { useParams } from "react-router-dom";
 import { getAllProjects } from "../../../store/slices/projectSlice";
 import { CreateNewColumn } from "../../../store/slices/columnSlice";
 
+// __________ Socket io ___________
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
+
 const CreateColumn = ({
   boardId,
   toggleCreateColumn,
@@ -27,8 +34,7 @@ const CreateColumn = ({
     const data = await dispatch(CreateNewColumn({ name: columnName, boardId }));
 
     if (data.payload) {
-      console.log("data---->>", data.payload);
-
+      socket.emit("columnCreated", data.payload);
       dispatch(getAllProjects());
       setColumnName("");
       setToggleCreateColumn(false);

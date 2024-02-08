@@ -2,13 +2,11 @@ import React, { useCallback, useEffect } from "react";
 import { Fragment, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { CreateNewBoard } from "../../../store/slices/boardSlice";
 import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "react-toastify";
-import { useParams } from "react-router-dom";
+
 import { getAllProjects } from "../../../store/slices/projectSlice";
-import { CreateNewColumn } from "../../../store/slices/columnSlice";
-import { FaCross } from "react-icons/fa";
+
 import {
   updateTaskById,
   updateTaskText,
@@ -16,25 +14,39 @@ import {
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { IoClose } from "react-icons/io5";
 
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
+
 const EditTaskOverlay = ({
   TaskToEdit: { text, _id, labels, flagged },
   setTaskToEdit,
+
+  setEditTaskId,
   board,
   setBoard,
 }) => {
   const dispatch = useDispatch();
+
   const [open, setOpen] = useState(false);
   const cancelButtonRef = useRef(null);
   const { loading } = useSelector((state) => state.task);
-  const [values, setValues] = useState({});
+  const [values, setValues] = useState({
+    text,
+    labels,
+    flagged,
+  });
   const [newLabel, setNewLabel] = useState("");
 
   useEffect(() => {
-    dispatch(getAllProjects());
     setValues({ text, labels, flagged });
-  }, [text, labels, flagged]);
+  }, [text]);
+
+  // ____________ Update Task ____________
+
   const handleUpdateTask = async () => {
-    console.log(values);
     if (values.text.trim().length === 0)
       return toast.error("Task name is required");
     const data = await dispatch(
@@ -45,8 +57,11 @@ const EditTaskOverlay = ({
         flagged: values?.flagged,
       })
     );
-    console.log(data);
-    if (data.payload) {
+
+    if (data.payload?.updatedTask) {
+      dispatch(getAllProjects());
+      socket.emit("taskUpdated", data?.payload?.updatedTask);
+
       setBoard({
         ...board,
         columns: board.columns.map((column) => {
@@ -61,15 +76,14 @@ const EditTaskOverlay = ({
           };
         }),
       });
+      setTaskToEdit({});
       setOpen(false);
       setValues({ text: "", labels: [], flagged: false });
-      setTaskToEdit({});
-
-      dispatch(getAllProjects());
-      console.log("udpated client", data.payload);
+      setEditTaskId(null);
     }
   };
 
+  // ____________ Add Label ____________
   const handleAddLabel = (e) => {
     e.preventDefault();
 
@@ -82,6 +96,8 @@ const EditTaskOverlay = ({
       setNewLabel("");
     }
   };
+
+  // ____________ Delete Label ____________
   const handleDeleteLabel = (label) => {
     const newLabels = values.labels.filter((l) => l !== label);
     setValues({ ...values, labels: newLabels });
@@ -138,7 +154,8 @@ const EditTaskOverlay = ({
                           >
                             Task Name
                           </label>
-                          <input
+                          <textarea
+                            rows={3}
                             type="text"
                             name="text"
                             id="text"

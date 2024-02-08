@@ -19,17 +19,30 @@ import CreateProject from "./CreateProject";
 import {
   deleteSingleProject,
   getAllProjects,
+  getAllUserProjects,
   handleStarredProject,
 } from "../../store/slices/projectSlice";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
 //  Icons
 import { AiOutlineDelete } from "react-icons/ai";
-import { FaRegCopy, FaRegEdit, FaShare } from "react-icons/fa";
+import {
+  FaExclamationTriangle,
+  FaRegCopy,
+  FaRegEdit,
+  FaShare,
+} from "react-icons/fa";
 import { HiCursorArrowRipple } from "react-icons/hi2";
 import LoadingScreen from "../../components/ui/LoadingScreen";
 import EditProjectOverlay from "./EditProjectOverlay";
 import { useUser } from "../../Context/userContext";
+
+// __________ Socket io ___________
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 
 const AllProjects = ({ allProjects, setAllProjects }) => {
   const dispatch = useDispatch();
@@ -40,7 +53,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state?.projects);
 
-  // ------ states for more info dropdown  --------
+  // ------ States for more info dropdown  --------
   const [isOpen, setIsOpen] = useState(false);
   const [openId, setOpenId] = useState(null);
   const [createProject, setCreateProject] = useState(false);
@@ -55,9 +68,10 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
   const [projects, setProjects] = useState([]);
   const filters = ["All projects", "Starred", "Shared with me", "Archived"];
   const [selectedFilter, setSelectedFilter] = useState(
-    filters[0] || "Unselected"
+    localStorage.getItem("selectedFilter") || filters[0]
   );
 
+  //  ________ Sorting projects based on filters  ________
   useEffect(() => {
     if (selectedFilter === "All projects") {
       setProjects(allProjects);
@@ -70,14 +84,13 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
       const sharedWithMe = [...allProjects].filter(
         (project) => project?.userId?._id !== user._id
       );
-      console.log("Allprojects", allProjects);
-      console.log("shared with me", sharedWithMe);
       setProjects(sharedWithMe);
     } else {
       setProjects(allProjects);
     }
   }, [selectedFilter, allProjects]);
 
+  // _________ Redirecting to login if not authenticated __________
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -87,19 +100,55 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
     }
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (e.target.id !== "menu-button") {
+        isOpen && setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [isOpen, setIsOpen]);
+
+  // ______________ Real time updates ______________
+  useEffect(() => {
+    // __________ Project ___________
+
+    socket.on("projectUpdated", (project) => {
+      dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
+
+      toast.info(`"${project?.title}" project is updated`);
+    });
+    socket.on("projectDeleted", (project) => {
+      dispatch(getAllProjects());
+      toast.info(`"${project?.title}" project is deleted`);
+    });
+
+    return () => {
+      socket.off("projectUpdated");
+      socket.off("projectDeleted");
+    };
+  }, []);
+
   // _______ Delete project by id  _______
   const deleteProjectById = async () => {
     const data = await dispatch(deleteSingleProject(deleteProject?._id));
 
-    if (data?.payload) {
-      console.log(data);
-      toast.info(data?.payload?.message);
+    if (data?.payload?.project) {
+      socket.emit("projectDeleted", data?.payload?.project);
       const filteredProjects = allProjects.filter(
         (project) => project._id != deleteProject._id
       );
       setAllProjects(filteredProjects);
       setDeleteProject(null);
       dispatch(getAllProjects());
+    } else {
+      toast.error(data?.payload?.message);
     }
   };
 
@@ -172,7 +221,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                       <th>Description</th>
                       <th>Lead</th>
                       <th>Team</th>
-                      <th className="flex justify-center ">More Actions</th>
+                      <th className="flex justify-center">More Actions</th>
                     </tr>
                   </thead>
 
@@ -225,14 +274,18 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                               </Link>
                             </td>
                             <td
+                              title={item?.description}
                               className={`
+                                w-2/5
                             ${
                               item?.description
                                 ? "text-gray-600"
                                 : "text-gray-400"
                             }`}
                             >
-                              {item?.description
+                              {item?.description?.length > 60
+                                ? item?.description?.slice(0, 60) + "..."
+                                : item?.description?.length > 0
                                 ? item?.description
                                 : "No description"}
                             </td>
@@ -290,33 +343,39 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                               </div>
                             </td>
                             {/*------------- More Info ------------ */}
-                            <td className="flex justify-center cursor-pointer">
-                              <div className="relative inline-block text-left">
-                                <div>
-                                  <button
-                                    onClick={() => {
-                                      setIsOpen(!isOpen);
-                                      setOpenId(item._id);
-                                    }}
-                                    type="button"
-                                    className={`inline-flex ${
+                            <td
+                              className="flex justify-center cursor-pointer"
+                              id="menu-button"
+                            >
+                              <div
+                                id="menu-button"
+                                className="relative inline-block text-left"
+                              >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+
+                                    setIsOpen(!isOpen);
+                                    setOpenId(item._id);
+                                  }}
+                                  type="button"
+                                  className={`inline-flex ${
+                                    isOpen && openId == item._id
+                                      ? " bg-indigo-100"
+                                      : "bg-transparent text-gray-900 outline-none  "
+                                  } border-none w-full justify-center gap-x-1.5 h-10 items-center rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+                                  id="menu-button"
+                                  aria-expanded="true"
+                                  aria-haspopup="true"
+                                >
+                                  <ThreeDots
+                                    color={
                                       isOpen && openId == item._id
-                                        ? " bg-indigo-100"
-                                        : "bg-transparent text-gray-900 outline-none  "
-                                    } border-none w-full justify-center gap-x-1.5 h-8 items-center rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
-                                    id="menu-button"
-                                    aria-expanded="true"
-                                    aria-haspopup="true"
-                                  >
-                                    <ThreeDots
-                                      color={
-                                        isOpen && openId == item._id
-                                          ? "indigo"
-                                          : "gray"
-                                      }
-                                    />
-                                  </button>
-                                </div>
+                                        ? "indigo"
+                                        : "gray"
+                                    }
+                                  />
+                                </button>
 
                                 <div
                                   className={`absolute ${

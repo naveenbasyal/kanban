@@ -8,7 +8,19 @@ import {
 } from "../../store/slices/boardSlice";
 import { Dialog, Transition } from "@headlessui/react";
 
-import { getAllProjects } from "../../store/slices/projectSlice";
+import {
+  getAllProjects,
+  getAllUserProjects,
+} from "../../store/slices/projectSlice";
+import { useLocation } from "react-router-dom";
+
+// __________ Socket io ___________
+import io from "socket.io-client";
+import { toast } from "react-toastify";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 
 const EditBoardOverlay = ({
   setToggleEditBoard,
@@ -18,7 +30,7 @@ const EditBoardOverlay = ({
 }) => {
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
-
+  const location = useLocation();
   const { loading } = useSelector((state) => state.board);
 
   const [values, setValues] = useState({
@@ -28,12 +40,15 @@ const EditBoardOverlay = ({
   });
 
   const handleUpdateBoard = async () => {
-    setBoard({
-      ...board,
-      status: values.status,
-      title: values.title,
-      description: values.description,
-    });
+    if (location.pathname.includes("board")) {
+      setBoard({
+        ...board,
+        status: values.status,
+        title: values.title,
+        description: values.description,
+      });
+    }
+
     const data = await dispatch(
       UpdateBoardNameOrDescription({
         boardId: _id,
@@ -42,10 +57,14 @@ const EditBoardOverlay = ({
         status: values.status,
       })
     );
-    if (data.payload) {
+    if (data.payload?.board) {
+      socket.emit("boardUpdated", data.payload?.board);
       dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
       setToggleEditBoard(false);
       setValues({ title: "", description: "" });
+    } else {
+      toast.error(data?.payload?.message);
     }
   };
 
@@ -102,7 +121,7 @@ const EditBoardOverlay = ({
                           setValues({ ...values, title: e.target.value })
                         }
                         placeholder="Board name"
-                        className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        className="border border-gray-300 rounded-md px-4 py-4 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
@@ -121,7 +140,7 @@ const EditBoardOverlay = ({
                         placeholder="Board description"
                         name="board-description"
                         id="board-description"
-                        className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        className="border border-gray-300 rounded-md px-4 py-4 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
                     </div>
 
@@ -140,7 +159,7 @@ const EditBoardOverlay = ({
                         }
                         name="board-status"
                         id="board-status"
-                        className="border cursor-pointer border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                        className="border cursor-pointer border-gray-300 rounded-md px-4 py-4 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       >
                         <option value="active">Active</option>
                         <option value="paused">Paused</option>

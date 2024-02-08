@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import InputText from "./form/InputText";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowIcon, Notification, SearchIcon } from "./svg";
+import { useNavigate } from "react-router-dom";
+import { Notification, SearchIcon } from "./svg";
 import { useUser } from "../Context/userContext";
 import { IoMdLogOut } from "react-icons/io";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { logout } from "../store/slices/authSlice";
-import MyProfile from "../pages/user/MyProfile";
+import { logoutProjects } from "../store/slices/projectSlice";
+import { logoutUser } from "../store/slices/userSlice";
 
 const Navbar = ({ openProfile, setOpenProfile }) => {
   const { user } = useUser();
@@ -17,6 +18,9 @@ const Navbar = ({ openProfile, setOpenProfile }) => {
 
   const handleLogout = () => {
     dispatch(logout());
+    dispatch(logoutProjects());
+    dispatch(logoutUser());
+
     navigate("/login");
   };
   return (

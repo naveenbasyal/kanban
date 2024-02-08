@@ -33,7 +33,7 @@ export const getAllUserProjects = createAsyncThunk(
         },
       });
       const data = await res.json();
-
+      // console.log("user data from slice new", data);
       return data;
     } catch (err) {
       return rejectWithValue(err.response);
@@ -132,7 +132,15 @@ const initialState = {
 const projectSlice = createSlice({
   name: "project",
   initialState,
-  reducers: {},
+  reducers: {
+    logoutProjects: (state, action) => {
+      state.projects = [];
+      state.allProjects = [];
+      state.loading = false;
+      state.editLoading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(createNewProject.pending, (state, action) => {
       state.loading = true;
@@ -203,5 +211,5 @@ const projectSlice = createSlice({
     });
   },
 });
-
+export const { logoutProjects } = projectSlice.actions;
 export default projectSlice.reducer;

@@ -70,7 +70,7 @@ const Login = () => {
             Kanbuddy
           </a>
           <div className="w-full bg-white rounded-lg shadow max-w-2xl py-3 ">
-            <div className="space-y-10 p-12">
+            <div className="space-y-8 p-12">
               <h1 className="font-bold leading-tight tracking-tight text-heading text-4xl ">
                 Login to your account
               </h1>
@@ -183,6 +183,11 @@ const Login = () => {
                   </Link>
                 </p>
               </form>
+              <div className="flex items-center mt-0">
+                <div className="h-[1.4px] w-[100%] bg-gray-300"></div>
+                <div className="mx-2 text-pruple">or</div>
+                <div className="h-[1.4px] w-[100%] bg-gray-300"></div>
+              </div>
               <div className="w-full flex items-center justify-center">
                 <GoogleLogin
                   size="large"

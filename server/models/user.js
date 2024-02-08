@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Email is required"],
     },
+    bio: {
+      type: String,
+      default: "I'm using Kanbuddy!",
+    },
     password: {
       type: String,
       required: [true, "Password is required"],

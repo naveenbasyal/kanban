@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { FaRegEdit } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
@@ -11,9 +11,22 @@ import CreateBoard from "../boards/CreateBoard";
 import { NotFound } from "../../components/svg";
 import EditProjectOverlay from "./EditProjectOverlay";
 import { useUser } from "../../Context/userContext";
+import {
+  getAllProjects,
+  getAllUserProjects,
+} from "../../store/slices/projectSlice";
+// __________ Socket io ___________
+import io from "socket.io-client";
+import { toast } from "react-toastify";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 
 const SingleProject = ({ setAllProjects }) => {
   const id = useParams()?.projectId;
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useUser();
   const { allProjects: projects, loading } = useSelector(
     (state) => state?.projects
@@ -22,15 +35,56 @@ const SingleProject = ({ setAllProjects }) => {
   const [toggleCreateBoard, setToggleCreateBoard] = useState(false);
   const [editProject, setEditProject] = useState(null);
 
+  // Get the single project by id
   useEffect(() => {
     const SingleProject = projects?.filter((project) => project._id === id);
     SingleProject && setProject(...SingleProject);
   }, [projects]);
 
+  useEffect(() => {
+    dispatch(getAllProjects());
+  }, [dispatch]);
+
+  useEffect(() => {
+    socket.on("boardCreated", (board) => {
+      dispatch(getAllProjects());
+      toast.info(`"${board?.title}" board is created`);
+    });
+    socket.on("boardUpdated", (board) => {
+      dispatch(getAllProjects());
+      toast.info(`"${board?.title}" board is updated`);
+    });
+    socket.on("boardDeleted", (board) => {
+      dispatch(getAllProjects());
+      toast.info(`"${board?.title}" board is deleted`);
+    });
+    // __________ Project ___________
+
+    socket.on("projectUpdated", (project) => {
+      dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
+      toast.info(`"${project?.title}" project is updated`);
+    });
+
+    socket.on("projectDeleted", (project) => {
+      dispatch(getAllProjects());
+      toast.info(`"${project?.title}" project is deleted`);
+      navigate("/");
+    });
+
+    return () => {
+      socket.off("projectUpdated");
+      socket.off("projectDeleted");
+      socket.off("boardCreated");
+      socket.off("boardUpdated");
+      socket.off("boardDeleted");
+    };
+  }, []);
+
   return (
     <>
       {project && (
-        <div className="single-project mt-10 mb-20 mx-6">
+        <div className="single-project px-13 pb-20 pt-10">
           {/* ---------- Project Information and all the Boards of the project ------- */}
 
           <div className="flex gap-5 ">

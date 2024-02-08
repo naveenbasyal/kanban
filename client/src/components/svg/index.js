@@ -77,6 +77,7 @@ export const PlusIconThin = () => {
 export const ThreeDots = ({ color }) => {
   return (
     <svg
+      id="menu-button"
       style={{
         width: "1.7rem",
       }}

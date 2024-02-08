@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { FaPencilAlt, FaRegEdit } from "react-icons/fa";
+import { FaInfo, FaInfoCircle, FaPencilAlt, FaRegEdit } from "react-icons/fa";
 import { IoCheckmark, IoClose, IoFlag } from "react-icons/io5";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -29,8 +29,15 @@ import ColumnLimitOverlay from "./columns/ColumnLimitOverlay.js";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useUser } from "../../Context/userContext.js";
 import EditBoardOverlay from "./EditBoardOverlay.js";
+import { MdInfoOutline } from "react-icons/md";
+// __________ Socket io ___________
+import io from "socket.io-client";
 
-const SingleBoard = () => {
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
+
+const SingleBoard = ({ allProjects, setAllProjects }) => {
   const inputRef = useRef();
   const dispatch = useDispatch();
   const projectId = useParams()?.projectId;
@@ -89,7 +96,90 @@ const SingleBoard = () => {
       : "row"
   );
 
+  // _______________ Socket io ________________
+  useEffect(() => {
+    // Listen for "Task" from the server
+
+    socket.on("taskCreated", (task) => {
+      dispatch(getAllProjects());
+      toast.info(`New task -> ${task.text}`);
+    });
+    socket.on("taskDeleted", (task) => {
+      dispatch(getAllProjects());
+      toast.info(`Task Deleted -> ${task.text}`);
+    });
+    socket.on("taskUpdated", (task) => {
+      dispatch(getAllProjects());
+      toast.info(`Task Updated -> ${task.text}`);
+    });
+    socket.on("taskFlagged", (task) => {
+      dispatch(getAllProjects());
+      toast.info(`A Task is Flagged`);
+    });
+    socket.on("taskDraggedInSameColumn", (data) => {
+      dispatch(getAllProjects());
+      toast.info(`Task rearranged in the ${data?.column?.name} column`);
+    });
+    socket.on("taskAssigned", (data) => {
+      if (data?._id) {
+        toast.info(`Task assigned to ${data?.username} `);
+      } else {
+        toast.info(`Task unassigned`);
+      }
+      dispatch(getAllProjects());
+    });
+    socket.on("taskDraggedInDifferentColumn", (data) => {
+      toast.info(
+        `Task rearranged from the ${data?.sourceColumn?.name} to ${data?.destinationColumn?.name} column`
+      );
+      dispatch(getAllProjects());
+    });
+    // _____________ Column _____________
+    socket.on("columnCreated", (column) => {
+      dispatch(getAllProjects());
+      toast.info(`New Column -> ${column?.name} `);
+    });
+    socket.on("columnDeleted", (column) => {
+      dispatch(getAllProjects());
+      toast.info(`${column.name} column is deleted`);
+    });
+    socket.on("columnNameUpdated", (column) => {
+      dispatch(getAllProjects());
+      toast.info(`Column name is updated to ${column.name}`);
+    });
+    socket.on("columnLimitUpdated", (column) => {
+      dispatch(getAllProjects());
+      toast.info(`${column.name} column limit is changed to ${column?.limit}`);
+    });
+    socket.on("columnDragged", (column) => {
+      dispatch(getAllProjects());
+
+      toast.info(`${column.name} column rearranged`);
+    });
+
+    return () => {
+      socket.off("taskCreated");
+      socket.off("taskDeleted");
+      socket.off("taskUpdated");
+      socket.off("taskFlagged");
+      socket.off("taskDraggedInSameColumn");
+      socket.off("taskDraggedInDifferentColumn");
+      socket.off("taskAssigned");
+      // _____Column _______
+      socket.off("columnCreated");
+      socket.off("columnDeleted");
+      socket.off("columnNameUpdated");
+      socket.off("columnLimitUpdated");
+      socket.off("columnDragged");
+    };
+  }, []);
+
   // _______________ Get Single Board ________________
+  useEffect(() => {
+    dispatch(getAllProjects());
+  }, []);
+
+  // _______________ Project Owner and Assignee List  ________________
   useEffect(() => {
     const SingleBoard = projects
       ?.find((project) => project._id === projectId)
@@ -98,6 +188,7 @@ const SingleBoard = () => {
       (project) => project?._id === projectId
     )?.userId?._id;
     setProjectOwnerId(projectOwnerId || "");
+
     const projectTeam = projects?.find(
       (project) => project?._id === projectId
     )?.team;
@@ -113,28 +204,32 @@ const SingleBoard = () => {
       inputRef.current.focus();
     }
   }, [inputOpen, inputOpenId]);
+
+  useEffect(() => {
+    const handleCloseDropdown = (e) => {
+      if (e.target.id !== "menu-button") {
+        isOpen && setIsOpen(false);
+        toggleAddAssignee && setToggleAddAssignee(false);
+      }
+    };
+    document.addEventListener("click", handleCloseDropdown);
+    return () => {
+      document.removeEventListener("click", handleCloseDropdown);
+    };
+  }, [isOpen]);
+
+  // _______________ Get members ________________
   useEffect(() => {
     const alltasksFlat = board?.columns?.map((col) => col.tasks).flat();
 
     const allmembers = alltasksFlat
       ?.map((task) => task.assignedTo)
       .filter((member) => member !== null);
-    setAllTasksMembers(allmembers);
-    const totalNoOfTasks = alltasksFlat?.length;
+    const uniqueMembers = [
+      ...new Map(allmembers.map((member) => [member._id, member])).values(),
+    ];
 
-    const tasksInProgressColumn = board?.columns?.find((col) =>
-      col.name.toLowerCase().includes("progress")
-    ).tasks?.length;
-    const tasksInDoneColumns = board?.columns?.find((col) =>
-      col.name.toLowerCase().includes("done")
-    )?.tasks?.length;
-    const progress =
-      (tasksInDoneColumns / totalNoOfTasks) * 100 +
-      (tasksInProgressColumn / totalNoOfTasks) * 100 -
-      (tasksInDoneColumns && tasksInProgressColumn === totalNoOfTasks
-        ? 100
-        : 0);
-    setProgress(progress);
+    setAllTasksMembers(uniqueMembers);
   }, [board]);
 
   //  _____________ Toggle Create Task Input ________________
@@ -147,24 +242,29 @@ const SingleBoard = () => {
   //  _______________ Handle Create Task ________________
   const handleCreateTask = async (columnId) => {
     if (task.trim() === "") return toast.error("Task can't be empty");
-    setBoard({
-      ...board,
-      columns: board?.columns?.map((col) => {
-        if (col._id === columnId) {
-          return {
-            ...col,
-            tasks: [...col.tasks, { text: task }],
-          };
-        }
-        return col;
-      }),
-    });
+
     const data = await dispatch(CreateNewTask({ text: task, columnId }));
+
     if (data?.payload?.task) {
+      socket.emit("taskCreated", data.payload.task);
+
+      setBoard({
+        ...board,
+        columns: board?.columns?.map((col) => {
+          if (col._id === columnId) {
+            return {
+              ...col,
+              tasks: [...col.tasks, data.payload.task],
+            };
+          }
+          return col;
+        }),
+      });
+
+      dispatch(getAllProjects());
       setTask("");
       setInputOpenId(null);
       setInputOpen(false);
-      dispatch(getAllProjects());
     }
   };
 
@@ -172,8 +272,9 @@ const SingleBoard = () => {
   const handleDeleteTask = async (id, columnId) => {
     const data = await dispatch(DeleteTaskById({ id, columnId }));
 
-    if (data?.payload?.message) {
-      // toast.info(data.payload.message);
+    if (data?.payload?.task) {
+      socket.emit("taskDeleted", data?.payload?.task);
+
       dispatch(getAllProjects());
       setIsOpen(false);
       setOpenId(null);
@@ -190,8 +291,8 @@ const SingleBoard = () => {
       DeleteColumnById({ columnId, boardId: board._id })
     );
 
-    if (data.payload) {
-      toast.info(data.payload.message);
+    if (data.payload?.column) {
+      socket.emit("columnDeleted", data.payload.column);
       dispatch(getAllProjects());
       setIsOpen(false);
       setOpenId(null);
@@ -236,7 +337,7 @@ const SingleBoard = () => {
       setBoard(newBoard);
 
       if (allColumns) {
-        const data0 = await dispatch(
+        const data = await dispatch(
           UpdateColumnOrder({
             boardId: board._id,
             columnId: draggableId,
@@ -245,13 +346,13 @@ const SingleBoard = () => {
           })
         );
 
-        if (data0.payload) {
-          const data1 = await dispatch(getAllProjects());
+        if (data.payload?.column) {
+          socket.emit("columnDragged", data.payload.column);
+          dispatch(getAllProjects());
+        } else {
+          toast.error(data?.payload?.message);
         }
       }
-
-      //   // toast.info(data.payload.message);
-      // }
 
       return;
     }
@@ -294,7 +395,7 @@ const SingleBoard = () => {
         };
         setBoard(newBoard);
         if (newBoard) {
-          dispatch(
+          const success = await dispatch(
             UpdateTaskOrder({
               destinationColumnId: DestnationColumn._id,
               sourceColumnId: SourceColumn._id,
@@ -303,8 +404,12 @@ const SingleBoard = () => {
               taskId: task._id,
             })
           );
+          if (success?.payload) {
+            //
+            socket.emit("taskDraggedInSameColumn", success?.payload);
 
-          dispatch(getAllProjects());
+            dispatch(getAllProjects());
+          }
         }
         return;
       } else {
@@ -340,7 +445,7 @@ const SingleBoard = () => {
         setBoard(newBoard);
 
         if (newBoard) {
-          dispatch(
+          const success = await dispatch(
             UpdateTaskOrder({
               destinationColumnId: DestnationColumn._id,
               sourceColumnId: SourceColumn._id,
@@ -349,6 +454,12 @@ const SingleBoard = () => {
               taskId: task._id,
             })
           );
+          if (success?.payload) {
+            //
+            socket.emit("taskDraggedInDifferentColumn", success?.payload);
+
+            dispatch(getAllProjects());
+          }
 
           // dispatch(getAllProjects());
         }
@@ -357,23 +468,28 @@ const SingleBoard = () => {
   };
 
   // _______________ Handle Change Column Name  ________________
-  const handleChangeColumnName = (columnId, oldColName) => {
+  const handleChangeColumnName = async (columnId, oldColName) => {
     if (!newColName) return toast.error("Please enter a new column name");
     else if (newColName === oldColName) {
       toast.error("Column name can't be same as previous");
       return;
     } else {
-      dispatch(UpdateColName({ columnId, newColumnName: newColName }));
-      dispatch(getAllProjects());
-      setColInputOpen(false);
-      setNewColName("");
-      setBoard({
-        ...board,
-        columns: board?.columns?.map((column) => {
-          if (column._id === columnId) return { ...column, name: newColName };
-          return column;
-        }),
-      });
+      const data = await dispatch(
+        UpdateColName({ columnId, newColumnName: newColName })
+      );
+      if (data?.payload) {
+        socket.emit("columnNameUpdated", data?.payload?.column);
+        dispatch(getAllProjects());
+        setColInputOpen(false);
+        setNewColName("");
+        setBoard({
+          ...board,
+          columns: board?.columns?.map((column) => {
+            if (column._id === columnId) return { ...column, name: newColName };
+            return column;
+          }),
+        });
+      }
     }
   };
   // _______________ Handle Assign Task ________________
@@ -411,15 +527,22 @@ const SingleBoard = () => {
         memberId: member._id,
       })
     );
-
-    if (data?.payload) {
+    
+    if (data?.payload?.user || data?.payload?.unassigned) {
+      if (data?.payload?.user) {
+        socket.emit("taskAssigned", data?.payload?.user);
+      } else {
+        socket.emit("taskAssigned", data?.payload?.unassigned);
+      }
       setToggleAddAssignee(false);
       dispatch(getAllProjects());
+    } else {
+      toast.error(data?.payload?.message);
     }
   };
 
   return (
-    <div className="single-board mt-10 mx-16  mb-60">
+    <div className="single-board py-10 px-14 mb-20">
       <DragDropContext onDragEnd={handleDrag}>
         {/* ______ UPPER Board Info PART _______ */}
         <div className="flex flex-col gap-4 ">
@@ -466,7 +589,7 @@ const SingleBoard = () => {
               } ml-5 transition-all duration-200 hover:shadow-lg 
               active:translate-y-[1.4px] `}
             >
-              <FaRegEdit size={20} />
+              <FaRegEdit size={18} className="text-gray-600" />
             </button>
           </div>
           {/* _______ Board Creation Date _____ */}
@@ -476,51 +599,21 @@ const SingleBoard = () => {
               month: "short",
               day: "numeric",
             })}
+
             {"  -  Present"}
           </div>
           {/* -------  Description -------- */}
           <div className="board-description capitalize text-xl">
             {board?.description}
           </div>
-          {/* __________ Progress Bar _____________ */}
-          {/* <div className="progress-bar flex items-center my-10 gap-5">
-            <div className="progress-bar-container relative w-[85%] h-5 bg-gray-100 rounded-full">
-              <div
-                style={{ width: `${progress}%` }}
-                className={`progress-bar-fill  absolute h-full rounded-full ${
-                  progress < 30
-                    ? "bg-red-400"
-                    : progress < 60
-                    ? "bg-yellow-400"
-                    : "bg-green-400"
-                }`}
-              ></div>
 
-              <div className="progress-bar-text absolute top-0 left-0 w-full h-full flex justify-center items-center">
-                <span className="text-xl font-semibold text-heading">
-                  {progress.toFixed(2)}%&nbsp;
-                </span>
-
-                <span className="text-xl font-semibold text-heading">
-                  {progress < 30
-                    ? "Not Good"
-                    : progress < 60
-                    ? "Average"
-                    : "Good"}
-                </span>
-
-                <span className="text-xl font-semibold ">
-                  {progress < 30 ? "🔴" : progress < 60 ? "🟡" : "🟢"}
-                </span>
-              </div>
-            </div>
-          </div> */}
+          {/* _______________ TEAM members _______________ */}
           <div className="others flex justify-between items-center">
             <div className="team-members text-xl">
               <div className="no-team flex gap-5 items-center">
                 <span className="font-semibold">Team: </span>
                 {allTasksMembers?.length > 0 ? (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                     {allTasksMembers?.map((member, index) => {
                       return (
                         <LazyLoadImage
@@ -537,8 +630,16 @@ const SingleBoard = () => {
                     })}
                   </div>
                 ) : (
-                  <span className="text-gray-400">No team members</span>
+                  <span className="text-gray-400">
+                    No tasks are assigned to team members
+                  </span>
                 )}
+                <div
+                  title="To add more team members, go back to project and click on edit and add more members"
+                  className="info cursor-pointer ml-10"
+                >
+                  <MdInfoOutline size={20} className="text-gray-500" />
+                </div>
               </div>
             </div>
 
@@ -593,9 +694,9 @@ const SingleBoard = () => {
               {...provided.droppableProps}
               className={`${
                 columnAlignment == "row"
-                  ? "flex overflow-x-auto w-[117.5rem]"
+                  ? "flex overflow-x-auto w-[117rem]"
                   : "grid grid-cols-3 gap-10 w-fit"
-              } gap-10 my-10  p-1`}
+              } gap-10 my-10  pb-5`}
             >
               {board?.columns?.map((col, index) => {
                 return (
@@ -604,21 +705,23 @@ const SingleBoard = () => {
                     draggableId={col._id}
                     index={index}
                   >
-                    {(provided) => (
+                    {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={`cursor-default h-fit ${
-                          columnAlignment == "row" ? "w-[30rem]" : "w-[30rem]"
-                        } shadow-lg shadow-indigo-100 rounded-md px-5 py-6 flex flex-col gap-2`}
+                          columnAlignment == "row"
+                            ? "min-w-[30rem] max-w-[30rem]"
+                            : "w-[30rem]"
+                        }  shadow-indigo-100 rounded-md px-5 py-6 flex flex-col gap-2`}
                       >
                         {/* _____ Column Header Part ____ */}
                         <div
                           onMouseOver={() =>
                             !colInputOpen && setEditColId(col._id)
                           }
-                          className={`border-b-4 my-2  ${
+                          className={`border-b-4 my-2 shadow-md  ${
                             col?.limit !== null &&
                             col.limit < col.tasks.length &&
                             "bg-red-100"
@@ -726,6 +829,7 @@ const SingleBoard = () => {
                               isOpen={isOpen}
                               setIsOpen={setIsOpen}
                               col={col}
+                              projectOwnerId={projectOwnerId}
                               openId={openId}
                               loading={loading}
                               setOpenId={setOpenId}
@@ -744,7 +848,9 @@ const SingleBoard = () => {
                                 col.name.toLowerCase().includes("complet")
                               ? "bg-green-50"
                               : "bg-gray-50"
-                          } rounded-lg min-h-[50vh] py-2 px-3 `}
+                          }
+                          
+                           rounded-lg min-h-[50vh] shadow-md py-2 px-3 `}
                         >
                           <Droppable
                             droppableId={col.name}
@@ -765,7 +871,7 @@ const SingleBoard = () => {
                                       draggableId={task?._id}
                                       index={index}
                                     >
-                                      {(provided) => (
+                                      {(provided, snapshot) => (
                                         <div
                                           onMouseOver={() =>
                                             !isOpen && setOpenId(task._id)
@@ -776,11 +882,14 @@ const SingleBoard = () => {
                                           ref={provided.innerRef}
                                           {...provided.draggableProps}
                                           {...provided.dragHandleProps}
-                                          className={`task cursor-default border-2 rounded-lg border-indigo-100 px-4 py-1 flex flex-col gap-4 ${
-                                            task?.flagged
-                                              ? "bg-yellow-100"
-                                              : "bg-white"
-                                          }`}
+                                          className={`task cursor-default border-2 rounded-lg
+                                            px-4 py-1 flex flex-col gap-4 ${
+                                              snapshot.isDragging
+                                                ? "bg-blue-100 shadow-lg border-2 border-blue-300"
+                                                : task?.flagged
+                                                ? "bg-yellow-100 border-yellow-200"
+                                                : "bg-white border-indigo-100"
+                                            }`}
                                         >
                                           <div className="flex justify-between items-center">
                                             {/* _____ Labels ____ */}
@@ -840,7 +949,7 @@ const SingleBoard = () => {
                                                 myprofile?._id &&
                                                 task?.createdBy !==
                                                   myprofile?._id && (
-                                                  <span className="bg-yellow-100 text-yellow-600 ring-1 ring-yellow-700">
+                                                  <span className="bg-yellow-100 text-yellow-500 ring-1 ring-[#f4e8bd] rounded-md px-1 flex items-center">
                                                     Issue
                                                   </span>
                                                 )}
@@ -902,8 +1011,10 @@ const SingleBoard = () => {
                                               )}
                                               {/* _______________ Task Assigning _____________ */}
                                               <div
+                                                id="menu-button"
                                                 className="assign-task relative cursor-pointer"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
                                                   setToggleAddAssignee(
                                                     !toggleAddAssignee
                                                   );
@@ -950,7 +1061,7 @@ const SingleBoard = () => {
                                                 )}
                                                 {toggleAddAssignee &&
                                                   taskId === task._id && (
-                                                    <>
+                                                    <div id="menu-button">
                                                       <div className="absolute border-l-2 border-t-2 border-gray-200 drop-shadow-lg bg-white w-5 h-10 right-[1.15rem] top-11 rotate-45"></div>
                                                       <div className="absolute z-50 drop-shadow-xl top-14 right-0 w-[20rem] border-2 border-gray-100   overflow-y-hidden bg-white p-3 rounded-lg ">
                                                         <div className="flex flex-col gap-2 h-[10rem] py-2 overflow-y-auto assignee-list-scroll">
@@ -1051,7 +1162,7 @@ const SingleBoard = () => {
                                                           )}
                                                         </div>
                                                       </div>
-                                                    </>
+                                                    </div>
                                                   )}
                                               </div>
                                             </div>
@@ -1160,8 +1271,11 @@ const SingleBoard = () => {
           />
         )}
         {/* _______ Edit Task Ovelay ______ */}
+
         {editTaskId && (
           <EditTask
+            setEditTaskId={setEditTaskId}
+            editTaskId={editTaskId}
             TaskToEdit={TaskToEdit}
             setTaskToEdit={setTaskToEdit}
             board={board}
@@ -1182,6 +1296,8 @@ const SingleBoard = () => {
             setToggleEditBoard={setToggleEditBoard}
             board={board}
             setBoard={setBoard}
+            setAllProjects={setAllProjects}
+            allProjects={allProjects}
           />
         )}
       </DragDropContext>

@@ -98,28 +98,29 @@ const updateTaskOrder = async (req, res) => {
       const sourceColumn = await Column.findById(sourceColumnId);
 
       const destinationColumn = await Column.findById(destinationColumnId);
-   
+
       if (destinationColumn) {
         // grabbing the task from source column
         const draggedTask = sourceColumn.tasks.find(
           (task) => task?._id.toString() === taskId
         );
-        
+
         // removing the tasks from source column
         sourceColumn.tasks.splice(sourceIndex, 1);
         await sourceColumn.save();
-        
+
         // adding the task to destination column
         destinationColumn.tasks.splice(destinationIndex, 0, draggedTask);
         await destinationColumn.save();
 
-        
         // now we have to change the columnId of the task
         const task = await Task.findById(taskId);
         task.columnId = destinationColumnId;
         await task.save();
 
-        return res.status(200).json({ message: "Task reordered successfully" });
+        return res
+          .status(200)
+          .json({ task, sourceColumn,destinationColumn, message: "Task reordered successfully" });
       }
     } else {
       const column = await Column.findById(sourceColumnId);
@@ -129,6 +130,8 @@ const updateTaskOrder = async (req, res) => {
       await column.save();
 
       return res.status(200).json({
+        task,
+        column,
         message: " Task reordered successfully in the same column",
       });
     }

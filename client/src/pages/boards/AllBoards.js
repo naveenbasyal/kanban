@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 
 import {
   ActiveIndicator,
@@ -26,6 +26,21 @@ const AllBoards = ({ boards, project, setProject }) => {
   // Edit Board
   const [toggleEditBoard, setToggleEditBoard] = useState(null);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (e.target.id !== "menu-button") {
+        isOpen && setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [isOpen, setIsOpen]);
+
+  
   return (
     <div className="all-boards">
       {/* ---------Boards Mappping---------- */}
@@ -76,7 +91,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                           isOpen && openId == board._id
                             ? " bg-indigo-100"
                             : "bg-transparent text-gray-900 outline-none  "
-                        } border-none w-full justify-center gap-x-1.5 h-8 items-center  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+                        } border-none w-full justify-center gap-x-1.5 h-10 items-center  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
                         id="menu-button"
                         aria-expanded="true"
                         aria-haspopup="true"
@@ -130,7 +145,6 @@ const AllBoards = ({ boards, project, setProject }) => {
                             )
                           )}
                         </span>
-
                         <Link
                           to={`board/${board?._id}`}
                           className="flex items-center gap-3 hover:text-indigo-500 text-gray-700  px-4 py-2 text-xl hover:bg-gray-100"
@@ -140,14 +154,21 @@ const AllBoards = ({ boards, project, setProject }) => {
                         >
                           <HiCursorArrowRipple size={16} /> Open Board
                         </Link>
+
                         <button
-                          disabled={board?.createdBy !== user?._id}
+                          disabled={
+                            board?.createdBy !== user?._id &&
+                            project?.userId?._id !== user?._id
+                              ? true
+                              : false
+                          }
                           onClick={() => {
                             setToggleEditBoard(board);
                             setIsOpen(false);
                           }}
                           className={`flex gap-3 ${
-                            board?.createdBy !== user?._id
+                            board?.createdBy !== user?._id &&
+                            project?.userId?._id !== user?._id
                               ? "cursor-not-allowed bg-gray-100 text-gray-300"
                               : "hover:text-indigo-500 text-gray-700 hover:bg-gray-100"
                           }  
@@ -172,13 +193,19 @@ const AllBoards = ({ boards, project, setProject }) => {
                           <FaRegCopy size={16} /> Copy board id
                         </span>
                         <button
-                          disabled={board?.createdBy !== user?._id}
+                          disabled={
+                            board?.createdBy !== user?._id &&
+                            project?.userId?._id !== user?._id
+                              ? true
+                              : false
+                          }
                           onClick={() => {
                             setBoardId(board._id);
                             setIsOpen(false);
                           }}
                           className={`${
-                            board?.createdBy !== user?._id
+                            board?.createdBy !== user?._id &&
+                            project?.userId?._id !== user?._id
                               ? "cursor-not-allowed bg-gray-100 text-gray-300"
                               : "text-red-500"
                           } flex items-center gap-3 px-4 py-2 text-xl

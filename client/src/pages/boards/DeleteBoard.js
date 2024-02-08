@@ -7,7 +7,17 @@ import { toast } from "react-toastify";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { DeleteBoardById } from "../../store/slices/boardSlice";
 import { useParams } from "react-router-dom";
-import { getAllProjects } from "../../store/slices/projectSlice";
+import {
+  getAllProjects,
+  getAllUserProjects,
+} from "../../store/slices/projectSlice";
+
+// __________ Socket io ___________
+import io from "socket.io-client";
+
+const socket = io("http://localhost:8000", {
+  transports: ["websocket"],
+});
 
 const DeleteProjectOverlay = ({
   title,
@@ -26,9 +36,11 @@ const DeleteProjectOverlay = ({
     const data = await dispatch(DeleteBoardById({ id: boardId, projectId }));
 
     if (data.payload?.board) {
+      socket.emit("boardDeleted", data.payload?.board);
       setOpen(false);
       setBoardId(null);
       dispatch(getAllProjects());
+      dispatch(getAllUserProjects());
     } else {
       toast.info(data.payload.message);
     }

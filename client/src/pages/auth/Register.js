@@ -208,6 +208,11 @@ const Register = () => {
                   </Link>
                 </p>
               </form>
+              <div className="flex items-center mt-0">
+                <div className="h-[1.4px] w-[100%] bg-gray-300"></div>
+                <div className="mx-2 text-pruple">or</div>
+                <div className="h-[1.4px] w-[100%] bg-gray-300"></div>
+              </div>
               <div className="w-full flex items-center justify-center">
                 <GoogleLogin
                   size="large"
