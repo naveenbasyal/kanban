@@ -8,8 +8,8 @@ import {
 } from "../../store/slices/projectSlice";
 import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "react-toastify";
-
-
+import { useFormik } from "formik";
+import { createValidation } from "../../validation/CreateValidations";
 
 const CreateProject = ({
   setCreateProject,
@@ -19,15 +19,28 @@ const CreateProject = ({
 }) => {
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
-
+  const {
+    handleChange,
+    handleSubmit,
+    values,
+    setValues,
+    errors,
+    touched,
+    handleBlur,
+  } = useFormik({
+    initialValues: {
+      title: "",
+      description: "",
+    },
+    validationSchema: createValidation,
+    onSubmit: (values) => {
+      console.log(values, "values");
+      handleCreate(values);
+    },
+  });
   const { loading, error, projects } = useSelector((state) => state.projects);
 
-  const [values, setValues] = useState({
-    title: "",
-    description: "",
-  });
-
-  const handleCreate = async () => {
+  const handleCreate = async (values) => {
     const data = await dispatch(createNewProject(values));
     if (data.payload._id) {
       setCreateProject(false);
@@ -40,9 +53,6 @@ const CreateProject = ({
     }
   };
 
-  const handleChange = useCallback((e) => {
-    setValues({ ...values, title: e.target.value });
-  }, []);
   return (
     <>
       <Transition.Root show={createProject} as={Fragment}>
@@ -61,7 +71,7 @@ const CreateProject = ({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <div className="fixed inset-0 bg-gray-500 dark:backdrop-blur-md dark:bg-opacity-0 bg-opacity-75 transition-opacity" />
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -75,46 +85,56 @@ const CreateProject = ({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <Dialog.Panel className="relative p-8 flex flex-col justify-between gap-10 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all  sm:my-8 sm:w-full max-w-3xl">
+                <Dialog.Panel className="relative p-8 flex flex-col justify-between gap-10 transform overflow-hidden rounded-lg bg-white  shadow-xl transition-all  sm:my-8 sm:w-full max-w-3xl">
                   <h3 className=" text-3xl font-bold text-heading">
                     Create a new project
                   </h3>
                   <div className="flex flex-col gap-10">
                     <div className="flex flex-col gap-2">
                       <label
-                        htmlFor="project-name"
+                        htmlFor="title"
                         className="text-xl font-semibold text-heading"
                       >
                         Project name
                       </label>
                       <input
                         type="text"
-                        name="project-name"
-                        id="project-name"
-                        value={values.title}
+                        name="title"
+                        id="title"
+                        value={values?.title}
+                        onBlur={handleBlur}
                         onChange={handleChange}
                         placeholder="Project name"
                         className="border capitalize border-gray-300 rounded-md px-4 py-3 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
+                      {errors.title && touched.title && (
+                        <p className="text-red-500 text-lg font-[500] ml-1">
+                          {errors.title}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-col gap-2">
                       <label
-                        htmlFor="project-description"
+                        htmlFor="description"
                         className="text-xl font-semibold text-heading"
                       >
                         Project description
                       </label>
                       <textarea
                         rows={3}
-                        value={values.description}
-                        onChange={(e) =>
-                          setValues({ ...values, description: e.target.value })
-                        }
+                        value={values?.description}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
                         placeholder="Project description"
-                        name="project-description"
-                        id="project-description"
+                        name="description"
+                        id="description"
                         className="border border-gray-300 rounded-md px-4 py-2 text-xl font-normal text-heading focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
                       />
+                      {errors.description && touched.description ? (
+                        <p className="text-red-500 text-lg font-[500] ml-1">
+                          {errors.description}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 
@@ -122,7 +142,7 @@ const CreateProject = ({
                     <button
                       type="button"
                       className="inline-flex w-full justify-center rounded-md bg-red-600 px-5 py-4 text-xl font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
-                      onClick={handleCreate}
+                      onClick={handleSubmit}
                     >
                       {loading ? "Creating..." : "Create"}
                     </button>

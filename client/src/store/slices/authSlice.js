@@ -9,7 +9,7 @@ export const googleLogin = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/user/google-login`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -25,7 +25,7 @@ export const googleLogin = createAsyncThunk(
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
-      console.log("login", data);
+
       return data;
     } catch (error) {
       console.log(error);
@@ -38,7 +38,7 @@ export const LoginUser = createAsyncThunk(
   "LoginUser",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/user/login`, {
+      const res = await fetch(` ${process.env.REACT_APP_SERVER_URL}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -49,9 +49,10 @@ export const LoginUser = createAsyncThunk(
 
       if (data.token) {
         localStorage.setItem("token", data.token);
+        return data;
+      } else {
+        return rejectWithValue(data?.message || "Login Failed");
       }
-      console.log("login", data);
-      return data;
     } catch (error) {
       return rejectWithValue(error.response);
     }
@@ -61,7 +62,7 @@ export const RegisterUser = createAsyncThunk(
   "RegisterUser",
   async ({ username, email, password }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/user/register`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,11 +70,13 @@ export const RegisterUser = createAsyncThunk(
         body: JSON.stringify({ username, email, password }),
       });
       const data = await res.json();
-
-      if (data.user) {
-        console.log(data.user);
+      console.log(data, "data")
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        return data;
+      } else {
+        return rejectWithValue(data?.message || "Register Failed");
       }
-
       return data;
     } catch (error) {
       return rejectWithValue(error.response);
@@ -116,7 +119,7 @@ const authSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(LoginUser.fulfilled, (state, action) => {
-      state.user = action.payload.user;
+      state.user = action?.payload?.user;
       state.loading = false;
       state.isAuthenticated = true;
       state.error = null;
@@ -131,6 +134,7 @@ const authSlice = createSlice({
     builder.addCase(RegisterUser.fulfilled, (state, action) => {
       state.user = action.payload.user;
       state.loading = false;
+      state.isAuthenticated = true;
       state.error = null;
     });
     builder.addCase(RegisterUser.rejected, (state, action) => {

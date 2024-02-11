@@ -4,7 +4,7 @@ import { FaInfo, FaInfoCircle, FaPencilAlt, FaRegEdit } from "react-icons/fa";
 import { IoCheckmark, IoClose, IoFlag } from "react-icons/io5";
 
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { badgeColors } from "../../App";
 import { AlignColumn, AlignRow, ThreeDots } from "../../components/svg";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
@@ -33,13 +33,14 @@ import { MdInfoOutline } from "react-icons/md";
 // __________ Socket io ___________
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000", {
+const socket = io(`${process.env.REACT_APP_SERVER_URL}`, {
   transports: ["websocket"],
 });
 
 const SingleBoard = ({ allProjects, setAllProjects }) => {
   const inputRef = useRef();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const projectId = useParams()?.projectId;
   const boardId = useParams()?.boardId;
   const { user: myprofile } = useUser();
@@ -153,8 +154,17 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
     });
     socket.on("columnDragged", (column) => {
       dispatch(getAllProjects());
-
       toast.info(`${column.name} column rearranged`);
+    });
+    // __________ Board ________
+    socket.on("boardUpdated", (board) => {
+      dispatch(getAllProjects());
+      toast.info(`"${board?.title}" board is updated`);
+    });
+    socket.on("boardDeleted", (board) => {
+      navigate(`/project/${projectId}`);
+      toast.info(`"${board?.title}" board is deleted`);
+      dispatch(getAllProjects());
     });
 
     return () => {
@@ -171,6 +181,9 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
       socket.off("columnNameUpdated");
       socket.off("columnLimitUpdated");
       socket.off("columnDragged");
+      // __________ Board _______
+      socket.off("boardUpdated");
+      socket.off("boardDeleted");
     };
   }, []);
 
@@ -217,6 +230,18 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
       document.removeEventListener("click", handleCloseDropdown);
     };
   }, [isOpen]);
+  useEffect(() => {
+    const handleCloseDropdown = (e) => {
+      if (e.target.id !== "menu-button") {
+        isOpen && setIsOpen(false);
+        toggleAddAssignee && setToggleAddAssignee(false);
+      }
+    };
+    document.addEventListener("click", handleCloseDropdown);
+    return () => {
+      document.removeEventListener("click", handleCloseDropdown);
+    };
+  }, [toggleAddAssignee]);
 
   // _______________ Get members ________________
   useEffect(() => {
@@ -224,9 +249,9 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
 
     const allmembers = alltasksFlat
       ?.map((task) => task.assignedTo)
-      .filter((member) => member !== null);
+      ?.filter((member) => member !== null);
     const uniqueMembers = [
-      ...new Map(allmembers.map((member) => [member._id, member])).values(),
+      ...new Map(allmembers?.map((member) => [member?._id, member])).values(),
     ];
 
     setAllTasksMembers(uniqueMembers);
@@ -527,7 +552,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
         memberId: member._id,
       })
     );
-    
+
     if (data?.payload?.user || data?.payload?.unassigned) {
       if (data?.payload?.user) {
         socket.emit("taskAssigned", data?.payload?.user);
@@ -542,7 +567,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
   };
 
   return (
-    <div className="single-board py-10 px-14 mb-20">
+    <div className="single-board py-10 px-10 mb-20">
       <DragDropContext onDragEnd={handleDrag}>
         {/* ______ UPPER Board Info PART _______ */}
         <div className="flex flex-col gap-4 ">
@@ -550,7 +575,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
           <div className="flex items-center gap-5">
             <div
               title="Board name"
-              className="board-name-edit text-heading lg:text-[2.5rem] font-bold"
+              className="board-name-edit text-heading dark:text-slate-300 lg:text-[2.5rem] font-bold"
             >
               {board?.title}
             </div>
@@ -589,11 +614,14 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
               } ml-5 transition-all duration-200 hover:shadow-lg 
               active:translate-y-[1.4px] `}
             >
-              <FaRegEdit size={18} className="text-gray-600" />
+              <FaRegEdit
+                size={18}
+                className="text-gray-600 dark:text-slate-300 dark:hover:text-slate-400"
+              />
             </button>
           </div>
           {/* _______ Board Creation Date _____ */}
-          <div className="board-creation-date text-xl text-purple">
+          <div className="board-creation-date text-xl text-purple dark:text-slate-400">
             {new Date(board?.createdAt).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
@@ -603,14 +631,14 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
             {"  -  Present"}
           </div>
           {/* -------  Description -------- */}
-          <div className="board-description capitalize text-xl">
+          <div className="board-description capitalize text-xl text-gray-500 dark:text-slate-300">
             {board?.description}
           </div>
 
           {/* _______________ TEAM members _______________ */}
           <div className="others flex justify-between items-center">
             <div className="team-members text-xl">
-              <div className="no-team flex gap-5 items-center">
+              <div className="no-team flex gap-4 items-center text-gray-500 dark:text-slate-400">
                 <span className="font-semibold">Team: </span>
                 {allTasksMembers?.length > 0 ? (
                   <div className="flex gap-2 items-center">
@@ -621,6 +649,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                           src={member?.profilePicture}
                           effect="blur"
                           title={member?.email}
+                          referrerPolicy="no-referrer"
                           alt="Profile Picture"
                           className="rounded-full border-2"
                           width={30}
@@ -630,7 +659,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                     })}
                   </div>
                 ) : (
-                  <span className="text-gray-400">
+                  <span className="text-gray-400 dark:text-slate-400">
                     No tasks are assigned to team members
                   </span>
                 )}
@@ -638,7 +667,10 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                   title="To add more team members, go back to project and click on edit and add more members"
                   className="info cursor-pointer ml-10"
                 >
-                  <MdInfoOutline size={20} className="text-gray-500" />
+                  <MdInfoOutline
+                    size={20}
+                    className="text-gray-500 dark:text-slate-300"
+                  />
                 </div>
               </div>
             </div>
@@ -668,7 +700,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
               </div>
               <button
                 onClick={() => setToggleCreateColumn(true)}
-                className="cursor-pointer gap-5 outline-none bg-[#16174b] hover:bg-[#1c3062] transition-all duration-200  active:translate-y-[1.3px] hover:shadow-gray-light create-board rounded-md p-5 flex  justify-center items-center "
+                className="cursor-pointer gap-5 outline-none bg-[#16174b] dark:text-slate-300 dark:bg-slate-700 hover:bg-[#1c3062] transition-all duration-200  active:translate-y-[1.3px] hover:shadow-gray-light create-board rounded-md p-5 flex  justify-center items-center "
               >
                 <p className="text-white text-xl font-semibold">
                   Add more column
@@ -721,20 +753,21 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                           onMouseOver={() =>
                             !colInputOpen && setEditColId(col._id)
                           }
-                          className={`border-b-4 my-2 shadow-md  ${
+                          className={`border-b-4 rounded-md my-2 shadow-md  ${
                             col?.limit !== null &&
-                            col.limit < col.tasks.length &&
-                            "bg-red-100"
+                            col.limit < col.tasks.length ?
+                            "bg-red-300 dark:bg-red-700 "
+                            : "bg-white dark:bg-slate-800"
                           } ${
                             col.name == "Todo"
-                              ? "border-blue-100"
+                              ? "border-blue-100 dark:border-slate-500"
                               : col.name == "In Progress"
-                              ? "border-indigo-100"
+                              ? "border-indigo-100 dark:border-slate-500"
                               : col.name.toLowerCase().includes("done") ||
                                 col.name.toLowerCase().includes("finish") ||
                                 col.name.toLowerCase().includes("complet")
-                              ? "border-green-100"
-                              : "border-gray-100"
+                              ? "border-green-100 dark:border-slate-500"
+                              : "border-gray-100 dark:border-slate-500"
                           } ${
                             colInputOpen && editColId == col._id
                               ? "py-3 px-4"
@@ -743,10 +776,10 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                         >
                           {/* ________ COL EDIT INPUT ______ */}
                           {colInputOpen && editColId == col._id ? (
-                            <div className="input-box rounded-lg w-full bg-white flex gap-2 relative">
+                            <div className="input-box rounded-lg w-full bg-white dark:bg-slate-700 flex gap-2 relative">
                               <>
                                 <input
-                                  className="text-xl w-full  border-2 border-gray-200 px-3 py-[4.5px] rounded-lg outline-none"
+                                  className="text-xl ring-0 text-gray-500 w-full dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 border-2 border-gray-200 px-3 py-[4.5px] rounded-lg outline-none"
                                   type="text"
                                   value={newColName || col.name}
                                   onChange={(e) =>
@@ -761,7 +794,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                     setColInputOpen(false);
                                     setNewColName("");
                                   }}
-                                  className="outline-none border-2 bg-gray-100 text-gray-600 border-gray-200 shadow-sm hover:shadow-md p-3 text-xl rounded-lg "
+                                  className="outline-none border-2 bg-gray-100 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600 text-gray-600  border-gray-200 shadow-sm hover:shadow-md p-3 text-xl rounded-lg "
                                 >
                                   <IoClose size={14} />
                                 </button>
@@ -769,7 +802,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                   onClick={() =>
                                     handleChangeColumnName(col._id, col.name)
                                   }
-                                  className="outline-none bg-indigo-100 text-indigo-600 border-2 border-indigo-200 shadow-sm hover:shadow-md p-3 text-xl rounded-lg "
+                                  className="outline-none bg-indigo-100 font-bold text-indigo-600 border-2 border-indigo-200 shadow-sm hover:shadow-md p-3 text-xl rounded-lg "
                                 >
                                   {columnLoading ? (
                                     <AiOutlineLoading3Quarters
@@ -784,14 +817,14 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                             </div>
                           ) : (
                             // ________ Column Name _______
-                            <div className="text-xl font-bold flex gap-5 h-10 items-center text-gray-500">
+                            <div className="text-xl font-bold flex gap-5 h-10 items-center text-gray-600 dark:text-slate-300">
                               <span>{col.name}!</span>
                               {editColId == col._id && (
                                 <span
                                   onClick={() => {
                                     setColInputOpen(true);
                                   }}
-                                  className="cursor-pointer p-3  hover:bg-gray-200 rounded-lg"
+                                  className="cursor-pointer p-3  hover:bg-gray-200 rounded-lg dark:hover:bg-slate-600 transition-all duration-200 hover:shadow-md"
                                 >
                                   <FaPencilAlt size={12} />
                                 </span>
@@ -840,14 +873,14 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                         <div
                           className={`${
                             col.name == "Todo"
-                              ? "bg-blue-50"
+                              ? "bg-blue-50 dark:bg-slate-800"
                               : col.name.toLowerCase().includes("progres")
-                              ? "bg-indigo-50"
+                              ? "bg-indigo-50 dark:bg-slate-800"
                               : col.name.toLowerCase().includes("done") ||
                                 col.name.toLowerCase().includes("finish") ||
                                 col.name.toLowerCase().includes("complet")
-                              ? "bg-green-50"
-                              : "bg-gray-50"
+                              ? "bg-green-50 dark:bg-slate-800"
+                              : "bg-gray-50 dark:bg-slate-800"
                           }
                           
                            rounded-lg min-h-[50vh] shadow-md py-2 px-3 `}
@@ -885,10 +918,10 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                           className={`task cursor-default border-2 rounded-lg
                                             px-4 py-1 flex flex-col gap-4 ${
                                               snapshot.isDragging
-                                                ? "bg-blue-100 shadow-lg border-2 border-blue-300"
+                                                ? "bg-blue-100 shadow-lg border-2 border-blue-300 dark:bg-slate-500"
                                                 : task?.flagged
-                                                ? "bg-yellow-100 border-yellow-200"
-                                                : "bg-white border-indigo-100"
+                                                ? "bg-yellow-200 border-yellow-200  dark:border-yellow-300 dark:bg-yellow-200"
+                                                : "bg-white border-indigo-100 dark:bg-slate-800 dark:border-slate-700"
                                             }`}
                                         >
                                           <div className="flex justify-between items-center">
@@ -992,7 +1025,11 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                             )}
                                           </div>
                                           {/* _____ Text ____ */}
-                                          <div className="cursor-default task-name items-center text-xl my-1 rounded-lg flex gap-5 ">
+                                          <div className={`cursor-default text-gray-700 ${
+                                            task?.flagged
+                                              ? "text-gray-600 dark:text-dark-400"
+                                              : "text-gray-700 dark:text-slate-200"
+                                          } task-name items-center text-xl my-1 rounded-lg flex gap-5 `}>
                                             {task.text}
                                           </div>
                                           {/* _______ Extras ______ */}
@@ -1052,7 +1089,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                       x="0px"
                                                       width={27}
                                                       y="0px"
-                                                      fill="#525d70"
+                                                      className="fill-gray-500 dark:fill-slate-300"
                                                     >
                                                       <path d="M32,5A27,27,0,0,0,12.5,50.65c.47.51,1,1,1.5,1.46a26.94,26.94,0,0,0,36,0q.81-.7,1.53-1.47A27,27,0,0,0,32,5ZM50.78,48.59C47.62,39.69,40.24,33.83,32,33.83S16.34,39.72,13.21,48.58a25.07,25.07,0,1,1,37.57,0Z" />
                                                       <path d="M32,10.75a9.84,9.84,0,1,0,9.84,9.83A9.84,9.84,0,0,0,32,10.75Z" />
@@ -1062,8 +1099,8 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                 {toggleAddAssignee &&
                                                   taskId === task._id && (
                                                     <div id="menu-button">
-                                                      <div className="absolute border-l-2 border-t-2 border-gray-200 drop-shadow-lg bg-white w-5 h-10 right-[1.15rem] top-11 rotate-45"></div>
-                                                      <div className="absolute z-50 drop-shadow-xl top-14 right-0 w-[20rem] border-2 border-gray-100   overflow-y-hidden bg-white p-3 rounded-lg ">
+                                                      <div className="absolute border-l-2 border-t-2 border-gray-200 dark:border-slate-700 drop-shadow-lg bg-white dark:bg-slate-700 w-5 h-10 right-[1.15rem] top-11 rotate-45"></div>
+                                                      <div className="absolute z-50 drop-shadow-xl top-14 right-0 w-[20rem] border-2 dark:border-slate-600 border-gray-100 dark:bg-slate-700   overflow-y-hidden bg-white p-3 rounded-lg ">
                                                         <div className="flex flex-col gap-2 h-[10rem] py-2 overflow-y-auto assignee-list-scroll">
                                                           {/* Make it unassigned  */}
                                                           {task?.assignedTo
@@ -1077,7 +1114,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                                 )
                                                               }
                                                               title="Unassign"
-                                                              className="flex items-center gap-3 hover:bg-gray-100 p-1 rounded-md"
+                                                              className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-slate-600 p-1 rounded-md"
                                                             >
                                                               <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
@@ -1085,13 +1122,13 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                                 x="0px"
                                                                 width={27}
                                                                 y="0px"
-                                                                fill="#525d70"
+                                                                className="fill-gray-500 dark:fill-slate-300"
                                                               >
                                                                 <path d="M32,5A27,27,0,0,0,12.5,50.65c.47.51,1,1,1.5,1.46a26.94,26.94,0,0,0,36,0q.81-.7,1.53-1.47A27,27,0,0,0,32,5ZM50.78,48.59C47.62,39.69,40.24,33.83,32,33.83S16.34,39.72,13.21,48.58a25.07,25.07,0,1,1,37.57,0Z" />
                                                                 <path d="M32,10.75a9.84,9.84,0,1,0,9.84,9.83A9.84,9.84,0,0,0,32,10.75Z" />
                                                               </svg>
 
-                                                              <span className="capitalize">
+                                                              <span className="capitalize text-gray-600 dark:text-slate-200 ">
                                                                 Unassign
                                                               </span>
                                                             </div>
@@ -1106,7 +1143,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                                 )
                                                               }
                                                               title={`Assign to ${myprofile?.email}`}
-                                                              className="flex items-center gap-3 border-2 bg-gray-200 hover:bg-gray-100 p-1 rounded-md"
+                                                              className="flex items-center gap-3 border-2 dark:border-slate-600 bg-gray-100 dark:bg-slate-700  hover:bg-gray-100 dark:hover:bg-slate-600 p-1 rounded-md"
                                                             >
                                                               <LazyLoadImage
                                                                 src={
@@ -1119,7 +1156,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                                 width={30}
                                                                 height={30}
                                                               />
-                                                              <span className="capitalize">
+                                                              <span className="capitalize text-gray-600 dark:text-slate-300">
                                                                 Assign to me
                                                               </span>
                                                             </div>
@@ -1138,7 +1175,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                                     )
                                                                   }
                                                                   title={`Assign to ${member?.email}`}
-                                                                  className="flex items-center gap-3 hover:bg-gray-100 p-1 rounded-md"
+                                                                  className="flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-slate-600 p-1 rounded-md"
                                                                 >
                                                                   <LazyLoadImage
                                                                     src={
@@ -1151,7 +1188,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                                     width={30}
                                                                     height={30}
                                                                   />
-                                                                  <span className="capitalize">
+                                                                  <span className="capitalize text-gray-600 dark:text-slate-300">
                                                                     {
                                                                       member?.username
                                                                     }
@@ -1178,10 +1215,10 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                           </Droppable>
                           {/* _______ Input ______ */}
                           {inputOpen && inputOpenId == col._id && (
-                            <div className="input-box p-3 rounded-lg bg-white ">
+                            <div className="input-box p-3 rounded-lg bg-white dark:bg-slate-700">
                               <textarea
                                 ref={inputRef}
-                                className="text-xl w-full min-h-36 border-2 border-gray-200 p-3 rounded-lg outline-none"
+                                className="text-xl w-full min-h-36 border-2 dark:placeholder-slate-300 ring-0 ring-gray-400 border-gray-200 dark:border-slate-600 text-gray-600 dark:text-slate-200 dark:bg-slate-700 p-3 rounded-lg outline-none"
                                 type="text"
                                 value={task}
                                 onChange={(e) => setTask(e.target.value)}
@@ -1207,7 +1244,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                       col.name.toLowerCase().includes("complet")
                                     ? "bg-green-100 text-green-600 border-green-200"
                                     : "bg-gray-100 text-gray-600 border-gray-200"
-                                }border-2 h-fit shadow-sm hover:shadow-md p-3 text-xl rounded-lg flex justify-center`}
+                                } border-2 h-fit shadow-sm hover:shadow-md p-3 text-xl rounded-lg flex justify-center`}
                               >
                                 {loading ? (
                                   <AiOutlineLoading3Quarters

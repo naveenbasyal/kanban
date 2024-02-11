@@ -40,20 +40,24 @@ import { useUser } from "../../Context/userContext";
 // __________ Socket io ___________
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000", {
+const socket = io(`${process.env.REACT_APP_SERVER_URL}`, {
   transports: ["websocket"],
 });
 
 const AllProjects = ({ allProjects, setAllProjects }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { isAuthenticated } = useSelector((state) => state.auth);
+  // my profile
   const { user } = useUser();
 
-  const navigate = useNavigate();
   const { loading } = useSelector((state) => state?.projects);
 
-  // ------ States for more info dropdown  --------
+  // Searching projects
+  const [query, setQuery] = useState("");
+
+  // _______ States for more info dropdown  _________
   const [isOpen, setIsOpen] = useState(false);
   const [openId, setOpenId] = useState(null);
   const [createProject, setCreateProject] = useState(false);
@@ -71,14 +75,26 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
     localStorage.getItem("selectedFilter") || filters[0]
   );
 
+  // _______ Searching projects _________
+  useEffect(() => {
+    if (query) {
+      const searchedProject = allProjects?.filter((project) =>
+        project?.title?.toLowerCase().includes(query?.toLowerCase())
+      );
+      setProjects(searchedProject);
+    } else {
+      setProjects(allProjects);
+    }
+  }, [query]);
+
   //  ________ Sorting projects based on filters  ________
   useEffect(() => {
     if (selectedFilter === "All projects") {
       setProjects(allProjects);
     } else if (selectedFilter === "Starred") {
-      const starredFirst = [...allProjects].sort((a, b) => {
-        return b.starred - a.starred;
-      });
+      const starredFirst = [...allProjects].filter(
+        (project) => project?.starred
+      );
       setProjects(starredFirst);
     } else if (selectedFilter === "Shared with me") {
       const sharedWithMe = [...allProjects].filter(
@@ -100,6 +116,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
     }
   }, [isAuthenticated]);
 
+  // ___________ Close dropdown on outside click ___________
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (e.target.id !== "menu-button") {
@@ -114,10 +131,8 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
     };
   }, [isOpen, setIsOpen]);
 
-  // ______________ Real time updates ______________
+  // ______________ Real time updates fro projects ______________
   useEffect(() => {
-    // __________ Project ___________
-
     socket.on("projectUpdated", (project) => {
       dispatch(getAllProjects());
       dispatch(getAllUserProjects());
@@ -165,18 +180,19 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
   };
 
   return (
-    <div className="all-projects h-full p-10">
+    <div className="all-projects h-full p-10 bg-white dark:bg-slate-900">
       {loading ? (
         <LoadingScreen />
       ) : (
         <>
           <div className="flex justify-between items-center">
-            <div className="text-heading  text-4xl font-[700] ">Projects</div>
+            <div className="text-heading dark:text-slate-300   text-4xl font-[700] ">
+              Projects
+            </div>
             <div className="create-project">
               <Button
                 setCreateProject={setCreateProject}
                 color="text-white"
-                bg="bg-dark-color"
                 title="Create project"
                 width="w-auto"
                 icon={<PlusIcon color="white" />}
@@ -187,10 +203,16 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
             <div className="flex gap-10">
               <div className="relative flex items-center w-1/4">
                 <input
-                  id="5"
+                  name="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
                   type="text"
                   placeholder="Search projects"
-                  className="peer outine-none relative h-10 w-full rounded-md pl-4 py-7 pr-10 font-normal text-xl border-2 border-gray-light focus:outline-dashed drop-shadow-sm transition-all duration-200 ease-in-out focus:bg-white focus:ring-2 focus:ring-[#7c91f1] focus:drop-shadow-lg"
+                  className="peer outine-none relative h-10 w-full rounded-md pl-4 py-7 pr-10
+                  dark:bg-slate-800 dark:border-slate-700
+                  font-normal text-xl border-1 border-gray-light focus:outline-dashed
+                   drop-shadow-sm transition-all duration-200 ease-in-out focus:bg-white 
+                   focus:ring-1 dark:focus:ring-slate-700 focus:ring-[#7c91f1] focus:drop-shadow-lg"
                 />
                 <span className="absolute right-2 transition-all duration-200 ease-in-out ">
                   <SearchIcon />
@@ -215,7 +237,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
               <div>
                 <table className="table text-xl ">
                   <thead>
-                    <tr className="text-xl">
+                    <tr className="text-xl text-gray-500 dark:text-slate-300 border-b-gray-200 dark:border-b-slate-600">
                       <th></th>
                       <th>Name</th>
                       <th>Description</th>
@@ -230,7 +252,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                       projects?.map((item, idx) => {
                         return (
                           <tr
-                            className="hover:bg-gray-100"
+                            className="hover:bg-gray-100 dark:hover:bg-slate-800 border-b-gray-200 dark:border-b-slate-600"
                             key={`${idx * item._id}-${item?._id}`}
                           >
                             <td>
@@ -279,7 +301,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                 w-2/5
                             ${
                               item?.description
-                                ? "text-gray-600"
+                                ? "text-gray-600 dark:text-slate-400"
                                 : "text-gray-400"
                             }`}
                             >
@@ -289,19 +311,25 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                 ? item?.description
                                 : "No description"}
                             </td>
+                            {/* _________ Lead By __________ */}
                             <td>
-                              <Link className="flex items-center gap-4 text-blue-500">
+                              <Link
+                                className="flex items-center gap-4 text-blue-500"
+                                title={`Lead by ${item?.userId?.email}`}
+                              >
                                 <LazyLoadImage
                                   effect="blur"
                                   alt="project logo"
                                   width={20}
                                   height={20}
-                                  className="rounded-box border"
+                                  className="rounded-full"
+                                  referrerPolicy="no-referrer"
                                   src={item?.userId?.profilePicture}
                                 />{" "}
                                 {item?.userId?.username}
                               </Link>
                             </td>
+                            {/* ____________ Team members ________- */}
                             <td>
                               <div className="flex -space-x-1 overflow-hidden">
                                 {item.team.length === 0 && (
@@ -315,14 +343,28 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                       ?.slice(0, 3)
                                       .map((member, id) => (
                                         <LazyLoadImage
+                                          title={`${member?.username} - ${member?.email}`}
                                           key={`${id}-${member._id}-${id}`}
                                           alt="member"
                                           effect="blur"
-                                          className="inline-block h-8 w-8 rounded-full ring-2 ring-white"
-                                          src={member?.profilePicture}
+                                          className="inline-block cursor-pointer h-8 w-8 rounded-full "
+                                          src={
+                                            member?.profilePicture ||
+                                            `https://api.dicebear.com/7.x/bottts/svg?seed=${
+                                              member?.username
+                                                ?.toLowerCase()
+                                                ?.split(" ")[0]
+                                            }`
+                                          }
                                         />
                                       ))}
-                                    <span className="text-red-400 text-xl">
+                                    <span
+                                      title="View all team members"
+                                      onClick={() => {
+                                        navigate(`/projects/${item._id}`);
+                                      }}
+                                      className="text-red-400 text-xl cursor-pointer"
+                                    >
                                       +{item.team.length - 3} more
                                     </span>
                                   </div>
@@ -330,12 +372,17 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                   item?.team?.length <= 3 &&
                                   item?.team?.map((member, id) => (
                                     <LazyLoadImage
+                                      title={
+                                        member?._id === user?._id
+                                          ? "You"
+                                          : `${member?.username} - ${member?.email}`
+                                      }
                                       key={`${id}-${member._id}-${
                                         id * member._id
                                       }`}
                                       alt="member"
                                       effect="blur"
-                                      className="inline-block h-8 w-8 rounded-full ring-2 ring-white"
+                                      className="inline-block h-8 cursor-pointer w-8 rounded-full"
                                       src={member?.profilePicture}
                                     />
                                   ))
@@ -354,16 +401,16 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-
                                     setIsOpen(!isOpen);
                                     setOpenId(item._id);
                                   }}
                                   type="button"
                                   className={`inline-flex ${
                                     isOpen && openId == item._id
-                                      ? " bg-indigo-100"
-                                      : "bg-transparent text-gray-900 outline-none  "
-                                  } border-none w-full justify-center gap-x-1.5 h-10 items-center rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+                                      ? " bg-indigo-100 dark:bg-slate-600"
+                                      : "bg-transparent text-gray-900 dark:text-slate-300 outline-none  "
+                                  } border-none w-full justify-center gap-x-1.5 h-10 items-center rounded-md
+                                    px-3 py-2 text-sm font-semibold   hover:bg-gray-50 dark:hover:bg-slate-600`}
                                   id="menu-button"
                                   aria-expanded="true"
                                   aria-haspopup="true"
@@ -384,7 +431,9 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                       : "hidden"
                                   } right-0 z-10 mt-2 w-56 py-4
                           transition-all duration-200 ease-in-out
-                           origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+                          dark:ring-1 dark:ring-slate-600  dark:bg-slate-800 
+                           origin-top-right rounded-md bg-whiteshadow-lg ring-1
+                            ring-black ring-opacity-5 focus:outline-none`}
                                   role="menu"
                                   aria-orientation="vertical"
                                   aria-labelledby="menu-button"
@@ -397,7 +446,8 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                   >
                                     <Link
                                       to={`/projects/${item?._id}`}
-                                      className="flex items-center gap-3 hover:text-indigo-500 text-gray-700  px-4 py-2 text-xl hover:bg-gray-100"
+                                      className="flex items-center gap-3 hover:text-indigo-500 text-gray-700 
+                                        px-4 py-2 text-xl hover:bg-gray-100 dark:text-slate-400 hover:dark:bg-slate-700"
                                       role="menuitem"
                                       tabIndex="-1"
                                       id="menu-item-1"
@@ -413,9 +463,9 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                       }}
                                       className={`flex gap-3 ${
                                         item?.userId?._id !== user._id
-                                          ? "text-gray-300 cursor-not-allowed bg-gray-100"
-                                          : "hover:text-indigo-500 text-gray-700 hover:bg-gray-100"
-                                      }  text-gray-700  items-center px-4 py-2 text-xl `}
+                                          ? "text-gray-300 cursor-not-allowed bg-gray-100 dark:bg-slate-700 dark:text-slate-500"
+                                          : "hover:text-indigo-500 text-gray-700 hover:bg-gray-100 dark:text-slate-400 hover:dark:bg-slate-700"
+                                      }   items-center px-4 py-2 text-xl `}
                                       role="menuitem"
                                       tabIndex="-1"
                                       id="menu-item-0"
@@ -430,7 +480,8 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                         );
                                         setIsOpen(false);
                                       }}
-                                      className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+                                      className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2
+                                       text-xl hover:bg-gray-100 dark:text-slate-400 hover:dark:bg-slate-700"
                                       role="menuitem"
                                       tabIndex="-1"
                                       id="menu-item-0"
@@ -442,10 +493,11 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                         setDeleteProject(item);
                                         setIsOpen(false);
                                       }}
+                                      disabled={item?.userId?._id !== user._id}
                                       className={`${
                                         item?.userId?._id !== user._id
-                                          ? "text-gray-300 cursor-not-allowed bg-gray-100"
-                                          : " text-red-600 hover:bg-gray-100"
+                                          ? "text-gray-300 cursor-not-allowed bg-gray-100 dark:text-slate-500 dark:bg-slate-700"
+                                          : " text-red-600 hover:bg-gray-100 dark:hover:bg-slate-700"
                                       } flex items-center gap-3 px-4 py-2 text-xl hover:bg-gray-100`}
                                       role="menuitem"
                                       tabIndex="-1"

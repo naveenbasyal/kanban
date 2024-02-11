@@ -4,7 +4,7 @@ export const CreateNewTask = createAsyncThunk(
   "CreateNewTask",
   async ({ text, columnId }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/task/create`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/task/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export const DeleteTaskById = createAsyncThunk(
   "DeleteTaskById",
   async ({ id, columnId }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/task/`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/task/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -46,7 +46,7 @@ export const updateTaskById = createAsyncThunk(
   "updateTaskById",
   async ({ taskId, text, labels, flagged }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/task/updateTask`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/task/updateTask`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -68,7 +68,7 @@ export const AssignTaskToMember = createAsyncThunk(
   async ({ taskId, memberId }, { rejectWithValue }) => {
     
     try {
-      const res = await fetch(`http://localhost:8000/api/task/assign-task`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/task/assign-task`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

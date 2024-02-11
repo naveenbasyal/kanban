@@ -5,7 +5,7 @@ export const CreateNewBoard = createAsyncThunk(
   async ({ values, projectId }, { rejectWithValue }) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/board/${projectId}/create`,
+        `${process.env.REACT_APP_SERVER_URL}/api/board/${projectId}/create`,
         {
           method: "POST",
           headers: {
@@ -30,7 +30,7 @@ export const DeleteBoardById = createAsyncThunk(
     console.log(id, projectId);
 
     try {
-      const res = await fetch(`http://localhost:8000/api/board/${projectId}`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/board/${projectId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ export const UpdateTaskOrder = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/board/update`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/board/update`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export const UpdateBoardNameOrDescription = createAsyncThunk(
   async ({ boardId, title, description, status }, { rejectWithValue }) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/board/editNameDescription`,
+        `${process.env.REACT_APP_SERVER_URL}/api/board/editNameDescription`,
         {
           method: "PATCH",
           headers: {

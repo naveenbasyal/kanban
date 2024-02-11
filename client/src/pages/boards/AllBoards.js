@@ -40,7 +40,6 @@ const AllBoards = ({ boards, project, setProject }) => {
     };
   }, [isOpen, setIsOpen]);
 
-  
   return (
     <div className="all-boards">
       {/* ---------Boards Mappping---------- */}
@@ -49,7 +48,7 @@ const AllBoards = ({ boards, project, setProject }) => {
           return (
             <div
               key={`${board._id}-${idx}-${board.title}`}
-              className="w-[28rem]  h-[16rem] shadow-board border-[1px] border-[#F2F2F2] rounded-md px-5 py-6 flex flex-col gap-3"
+              className="w-[28rem] dark:bg-slate-800  h-[16rem] shadow-board border-[1px] border-[#F2F2F2] dark:border-slate-700 rounded-md px-5 py-6 flex flex-col gap-3"
             >
               <div className="nav-section flex justify-between w-full items-center ">
                 {/* _______ Board Status _____ */}
@@ -91,7 +90,8 @@ const AllBoards = ({ boards, project, setProject }) => {
                           isOpen && openId == board._id
                             ? " bg-indigo-100"
                             : "bg-transparent text-gray-900 outline-none  "
-                        } border-none w-full justify-center gap-x-1.5 h-10 items-center  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
+                        } border-none w-full justify-center gap-x-1.5 h-10 items-center
+                          rounded-md  px-3 py-2 text-sm font-semibold dark:hover:bg-slate-700  hover:bg-gray-50`}
                         id="menu-button"
                         aria-expanded="true"
                         aria-haspopup="true"
@@ -109,6 +109,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                         isOpen && openId == board._id ? "block" : "hidden"
                       } right-0 z-10 mt-2 w-56 py-4
                           transition-all duration-200 ease-in-out
+                          dark:ring-1 dark:ring-slate-600  dark:bg-slate-800 
                            origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
                       role="menu"
                       aria-orientation="vertical"
@@ -118,7 +119,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                       <div className="py-3 flex flex-col gap-2" role="none">
                         {/* Board status change */}
                         <span
-                          className="flex gap-3 text-gray-700  items-center px-4 py-2 text-xl "
+                          className="flex gap-3 text-gray-700 dark:text-slate-300 hover:dark:bg-slate-700  items-center px-4 py-2 text-xl "
                           role="menuitem"
                           tabIndex="-1"
                           id="menu-item-0"
@@ -147,7 +148,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                         </span>
                         <Link
                           to={`board/${board?._id}`}
-                          className="flex items-center gap-3 hover:text-indigo-500 text-gray-700  px-4 py-2 text-xl hover:bg-gray-100"
+                          className="flex items-center gap-3 dark:text-slate-300 hover:dark:bg-slate-700 hover:text-indigo-500 text-gray-700  px-4 py-2 text-xl hover:bg-gray-100"
                           role="menuitem"
                           tabIndex="-1"
                           id="menu-item-1"
@@ -170,7 +171,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                             board?.createdBy !== user?._id &&
                             project?.userId?._id !== user?._id
                               ? "cursor-not-allowed bg-gray-100 text-gray-300"
-                              : "hover:text-indigo-500 text-gray-700 hover:bg-gray-100"
+                              : "hover:text-indigo-500 dark:text-slate-300 hover:dark:bg-slate-700 text-gray-700 hover:bg-gray-100"
                           }  
                            items-center px-4 py-2 text-xl `}
                           role="menuitem"
@@ -185,7 +186,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                             toast.info(`Board id copied to clipboard`);
                             setIsOpen(false);
                           }}
-                          className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+                          className="flex gap-3 hover:text-indigo-500 dark:text-slate-300 hover:dark:bg-slate-700 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
                           role="menuitem"
                           tabIndex="-1"
                           id="menu-item-0"
@@ -208,7 +209,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                             project?.userId?._id !== user?._id
                               ? "cursor-not-allowed bg-gray-100 text-gray-300"
                               : "text-red-500"
-                          } flex items-center gap-3 px-4 py-2 text-xl
+                          } flex items-center gap-3 dark:hover:bg-slate-700 px-4 py-2 text-xl
                            hover:bg-gray-100`}
                           role="menuitem"
                           tabIndex="-1"
@@ -222,8 +223,8 @@ const AllBoards = ({ boards, project, setProject }) => {
                   </div>
                 </span>
               </div>
-              <Link to={`board/${board._id}`} className="flex flex-col gap-2">
-                <div className="board-name flex items-center gap-3 text-2xl capitalize font-semibold">
+              <Link to={`board/${board?._id}`} className="flex flex-col gap-2">
+                <div className="board-name flex items-center dark:text-slate-300 text-slate-600 gap-3 text-2xl capitalize font-semibold">
                   {board.status == "active" ? (
                     <ActiveIndicator width="20" height="20" />
                   ) : board.status == "paused" ? (
@@ -233,28 +234,30 @@ const AllBoards = ({ boards, project, setProject }) => {
                       <FinishedIndicator width="20" height="20" />
                     )
                   )}
-                  {board.title}
+                  {board?.title}
                 </div>
-                <div className="createdAt text-md text-[#807C8D]">
+                <div className="createdAt text-md text-[#807C8D] dark:text-slate-400">
                   {/* formatted date Jan 1, 2024 */}
-                  {new Date(board.createdAt).toLocaleDateString("en-US", {
+                  {new Date(board?.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
                   })}
                   {"  - Present"}
                 </div>
-                <div className="board-description text-xl">
-                  {board.description}
+                <div className="board-description text-xl text-slate-600 dark:text-slate-400">
+                  {board?.description?.length > 60
+                    ? `${board?.description?.substring(0, 60)}...`
+                    : board?.description}
                 </div>
                 <div className="board-progress h-2 bg-gray-100 rounded-lg my-2">
                   <div
                     className={` h-2 ${
-                      board.status == "active"
+                      board?.status == "active"
                         ? "bg-[#0047ff]"
-                        : board.status == "paused"
+                        : board?.status == "paused"
                         ? "bg-[#ecb80f]"
-                        : board.status == "finished" && "bg-[#2dcd5b]"
+                        : board?.status == "finished" && "bg-[#2dcd5b]"
                     }
                     } rounded-lg w-1/6`}
                   ></div>

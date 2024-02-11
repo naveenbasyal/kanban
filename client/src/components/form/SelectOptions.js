@@ -12,13 +12,15 @@ const SelectOptions = ({ selectedFilter, setSelectedFilter, items }) => {
         <button
           onClick={handleDropdown}
           type="button"
-          className="relative  w-full cursor-pointer  rounded-md bg-white py-5 transition-all text-2xl  pl-3 pr-10 text-left text-heading shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 sm:text-sm sm:leading-6"
+          className="relative  w-full cursor-pointer  rounded-md bg-white dark:bg-slate-800
+           py-5 transition-all text-2xl  pl-3 pr-10 text-left text-heading dark:text-slate-300 
+            shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-slate-700 focus:outline-none focus:ring-2 focus:ring-gray-400 sm:text-sm sm:leading-6"
           aria-haspopup="listbox"
           aria-expanded="true"
           aria-labelledby="listbox-label"
         >
           <span className="flex items-center">
-            <span className="ml-3  text-xl text-purple font-semibold block truncate">
+            <span className="ml-3  text-xl text-purple dark:text-slate-300  font-semibold block truncate">
               {selectedFilter}
             </span>
           </span>
@@ -39,7 +41,9 @@ const SelectOptions = ({ selectedFilter, setSelectedFilter, items }) => {
         </button>
 
         <ul
-          className={`absolute z-10 mt-1 max-h-56  w-full transition-transform ease-in duration-200 overflow-auto rounded-md bg-white py-1  shadow-lg ring-2 ring-gray-300 focus:outline-none sm:text-sm 
+          className={`absolute z-10 mt-1 max-h-56  w-full transition-transform ease-in duration-200
+           overflow-auto rounded-md bg-white dark:bg-slate-800 py-1  shadow-lg ring-1 dark:ring-slate-700 ring-gray-300 
+           focus:outline-none sm:text-sm 
           ${
             isDropdownOpen
               ? "opacity-100 translate-y-0"
@@ -54,7 +58,8 @@ const SelectOptions = ({ selectedFilter, setSelectedFilter, items }) => {
           {items.map((item, index) => (
             <li
               key={index}
-              className="text-gray-900  relative cursor-pointer select-none py-2 pl-3 pr-9 hover:text-indigo-600 hover:font-semibold hover:bg-gray-100"
+              className="text-gray-900  relative cursor-pointer select-none py-2 pl-3 pr-9
+               hover:text-indigo-600 dark:text-slate-300  hover:font-semibold dark:hover:bg-slate-700 hover:bg-gray-100"
               id="listbox-option-0"
               role="option"
               onClick={() => {
@@ -78,10 +83,10 @@ const SelectOptions = ({ selectedFilter, setSelectedFilter, items }) => {
                   <svg
                     className="h-5 w-5 "
                     viewBox="0 0 20 20"
-                    fill="currentColor"
                     aria-hidden="true"
                   >
                     <path
+                      className="stroke-[#5A5B80] dark:stroke-slate-300"
                       fillRule="evenodd"
                       d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
                       clipRule="evenodd"

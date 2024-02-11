@@ -4,7 +4,7 @@ export const createNewProject = createAsyncThunk(
   "createNewProject",
   async (values, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/project/create`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/project/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export const getAllUserProjects = createAsyncThunk(
   "getAllUserProjects",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/project/`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/project/`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -44,7 +44,7 @@ export const getAllProjects = createAsyncThunk(
   "getAllProjects",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/project/all`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/project/all`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -63,7 +63,7 @@ export const deleteSingleProject = createAsyncThunk(
   "deleteSingleProject",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/project/`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/project/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export const UpdateProjectBasic = createAsyncThunk(
   "UpdateProjectBasic",
   async ({ projectId, title, description, team }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/project/updateBasic`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/project/updateBasic`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export const handleStarredProject = createAsyncThunk(
   async ({ projectId }, { rejectWithValue }) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/project/starred-project`,
+        `${process.env.REACT_APP_SERVER_URL}/api/project/starred-project`,
         {
           method: "PATCH",
           headers: {

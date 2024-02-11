@@ -9,7 +9,7 @@ import { useState } from "react";
 import { useUser } from "../../Context/userContext";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000", {
+const socket = io(`${process.env.REACT_APP_SERVER_URL}`, {
   transports: ["websocket"],
 });
 export const ColumnEditorTool = ({
@@ -37,7 +37,7 @@ export const ColumnEditorTool = ({
         type="button"
         className={`inline-flex ${
           isOpen && openId == col._id
-            ? " bg-indigo-100"
+            ? " bg-indigo-100 dark:bg-slate-500"
             : "bg-transparent text-gray-900 outline-none  "
         } border-none w-full h-10 items-center justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
         id="menu-button"
@@ -52,7 +52,8 @@ export const ColumnEditorTool = ({
           isOpen && openId == col._id ? "block" : "hidden"
         } right-0 z-10 mt-2 w-56 py-4
                     transition-all duration-200 ease-in-out
-                    origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+                    origin-top-right rounded-md bg-white dark:bg-slate-800 dark:ring-slate-600 dark:ring-1 shadow-lg ring-1
+                     ring-black ring-opacity-5 focus:outline-none`}
         role="menu"
         aria-orientation="vertical"
         aria-labelledby="menu-button"
@@ -64,7 +65,7 @@ export const ColumnEditorTool = ({
               setColLimit(col);
               setIsOpen(false);
             }}
-            className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+            className="flex gap-3 hover:text-indigo-500 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300  items-center px-4 py-2 text-xl hover:bg-gray-100"
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"
@@ -87,7 +88,7 @@ export const ColumnEditorTool = ({
                 ? "cursor-not-allowed bg-gray-100 text-gray-300"
                 : (col?.createdBy === user?._id ||
                     projectOwnerId === user?._id) &&
-                  "text-red-500 hover:bg-gray-100"
+                  "text-red-500 hover:bg-gray-100 dark:hover:bg-slate-700 "
             } 
             flex items-center gap-3 px-4 py-2 text-xl `}
             role="menuitem"
@@ -153,7 +154,7 @@ export const TaskEditorTool = ({
           type="button"
           className={`inline-flex ${
             isOpen && openId == task._id
-              ? " bg-indigo-100"
+              ? " bg-indigo-100 dark:bg-slate-600"
               : "bg-transparent text-gray-900 outline-none  "
           } border-none w-full h-10 items-center justify-center gap-x-1.5  rounded-md  px-3 py-2 text-sm font-semibold   hover:bg-gray-50`}
           id="menu-button"
@@ -168,7 +169,7 @@ export const TaskEditorTool = ({
           isOpen && openId == task._id ? "block" : "hidden"
         } right-0 z-10 mt-2 w-56 py-4
 transition-all duration-200 ease-in-out
-origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+origin-top-right rounded-md bg-white dark:bg-slate-800 dark:ring-slate-600 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
         role="menu"
         aria-orientation="vertical"
         aria-labelledby="menu-button"
@@ -193,9 +194,9 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
                 ? "cursor-not-allowed bg-gray-100 text-gray-300"
                 : (task?.createdBy === user?._id ||
                     projectOwnerId === user?._id) &&
-                  "text-gray-700 hover:text-indigo-500"
+                  "text-gray-700 hover:text-indigo-500 dark:text-slate-300 "
             } flex gap-3  items-center px-4 py-2 
-             text-xl hover:bg-gray-100`}
+             text-xl hover:bg-gray-100 dark:hover:bg-slate-700`}
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"
@@ -204,7 +205,7 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
           </button>
           <span
             onClick={handleAddFlag}
-            className="flex gap-3 hover:text-indigo-500 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
+            className="flex gap-3 hover:text-indigo-500 dark:hover:bg-slate-700 dark:text-slate-300 text-gray-700  items-center px-4 py-2 text-xl hover:bg-gray-100"
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"
@@ -233,7 +234,7 @@ origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 
                     projectOwnerId === user?._id) &&
                   "text-red-500"
             }  flex items-center gap-3 px-4 py-2 text-xl
-             hover:bg-gray-100`}
+             hover:bg-gray-100 dark:hover:bg-slate-700`}
             role="menuitem"
             tabIndex="-1"
             id="menu-item-0"

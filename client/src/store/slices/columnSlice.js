@@ -4,7 +4,7 @@ export const CreateNewColumn = createAsyncThunk(
   "CreateNewColumn",
   async ({ name, boardId }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/column/create`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/column/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -25,7 +25,7 @@ export const DeleteColumnById = createAsyncThunk(
   "DeleteColumnById",
   async ({ columnId, boardId }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/column/`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/column/`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +50,7 @@ export const UpdateColumnOrder = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/column/updateOrder`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/column/updateOrder`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +76,7 @@ export const UpdateColName = createAsyncThunk(
   "UpdateColName",
   async ({ columnId, newColumnName }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/column/updateName`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/column/updateName`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -100,7 +100,7 @@ export const UpdateColLimit = createAsyncThunk(
   "UpdateColLimit",
   async ({ columnId, limit }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/column/updateLimit`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/column/updateLimit`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

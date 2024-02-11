@@ -23,8 +23,13 @@ const userSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
-      default: `https://joesch.moe/api/v1/male/random?key=${randomKey.toString()}`,
+      default: function () {
+        return `https://api.dicebear.com/7.x/bottts/svg?seed=${
+          this.username?.toLowerCase()?.split(" ")[0]
+        }`;
+      },
     },
+
     projects: [
       {
         type: mongoose.Schema.Types.ObjectId,

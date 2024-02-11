@@ -25,7 +25,8 @@ module.exports = {
     require("@tailwindcss/forms"),
     require("daisyui"),
   ],
+  darkMode: "class",
   daisyui: {
-    themes: ["light", "dark", "cupcake"],
+    themes: false,
   },
 };

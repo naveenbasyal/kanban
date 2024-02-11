@@ -1,17 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const http = require("http"); // Import http module
-const socketIO = require("socket.io");
 const dotenv = require("dotenv");
-
 const app = express();
-const server = http.createServer(app); // Create an HTTP server using Express app
-const io = socketIO(server); // Pass the server to socket.io
+const http = require("http"); 
+
+const socketIO = require("socket.io");
+const server = http.createServer(app); 
+const io = socketIO(server); 
 
 const PORT = process.env.PORT || 8000;
 
-// --------- Routes ----------
+// ______ Routers  ______
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const boardRoutes = require("./routes/boardRoutes");
@@ -19,10 +19,12 @@ const taskRoutes = require("./routes/taskRoutes");
 const columnRoutes = require("./routes/columnRoutes");
 const verifyToken = require("./middlewares/verifyToken");
 
+
 dotenv.config();
 app.use(express.json());
 app.use(cors());
 
+//  Socket connections and events
 io.on("connection", (socket) => {
   console.log("Socket connected");
 
@@ -93,7 +95,8 @@ io.on("connection", (socket) => {
     console.log("Socket disconnected");
   });
 });
-console.log("ok ");
+
+//  DB connection and server start
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
@@ -105,12 +108,16 @@ mongoose
     console.log(err);
   });
 
+//  Base routes
 app.get("/", (req, res) => {
   res.json("Hello world");
 });
 
+// Routes
 app.use("/api/user", userRoutes);
 app.use("/api/project", projectRoutes);
 app.use("/api/board", verifyToken, boardRoutes);
 app.use("/api/column", verifyToken, columnRoutes);
 app.use("/api/task", verifyToken, taskRoutes);
+
+

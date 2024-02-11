@@ -1,12 +1,5 @@
-import React, { useEffect, useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useParams,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import React, { useEffect, useState, Suspense, lazy } from "react";
+import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import AllProjects from "./pages/projects/AllProjects";
@@ -59,6 +52,7 @@ export const badgeColors = {
 };
 
 const App = () => {
+  console.log("app env", process.env.REACT_APP_SERVER_URL);
   const dispatch = useDispatch();
   const token = getToken();
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -145,7 +139,7 @@ const App = () => {
           setSelectedBoard={setSelectedBoard}
         />
       )}
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 bg-white dark:bg-slate-900">
         {isAuthenticated && (
           <Navbar openProfile={openProfile} setOpenProfile={setOpenProfile} />
         )}

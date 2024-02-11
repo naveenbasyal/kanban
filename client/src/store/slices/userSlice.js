@@ -4,7 +4,7 @@ export const getSingleUser = createAsyncThunk(
   "getSingleUser",
   async ({ id }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/user/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -23,7 +23,7 @@ export const getAllUsers = createAsyncThunk(
   "getAllUsers",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/user/`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export const updateUserName = createAsyncThunk(
   "updateUserName",
   async ({ name }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/user/update-name`, {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/update-name`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

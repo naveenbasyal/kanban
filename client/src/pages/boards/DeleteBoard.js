@@ -15,7 +15,7 @@ import {
 // __________ Socket io ___________
 import io from "socket.io-client";
 
-const socket = io("http://localhost:8000", {
+const socket = io(`${process.env.REACT_APP_SERVER_URL}`, {
   transports: ["websocket"],
 });
 
@@ -65,7 +65,7 @@ const DeleteProjectOverlay = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div className="fixed inset-0 bg-gray-500 dark:backdrop-blur-md dark:bg-opacity-0  bg-opacity-75 transition-opacity" />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">

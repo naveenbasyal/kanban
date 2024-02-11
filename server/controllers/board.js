@@ -31,7 +31,7 @@ const createBoard = async (req, res) => {
     }
 
     await board.save();
-
+    
     await Project.findByIdAndUpdate(
       req.params?.projectId,
       {

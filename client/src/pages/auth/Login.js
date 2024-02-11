@@ -27,14 +27,17 @@ const Login = () => {
       toast.success("Login Successful");
       navigate("/");
     } else {
-      toast.error("Login Failed");
+      return toast.error(data?.payload || "Login Failed");
     }
   };
   useEffect(() => {
     if (localStorage.getItem("token")) {
       navigate("/");
+    } else {
+      navigate("/login");
     }
   }, []);
+
   const continueWithGoogle = async (credential) => {
     const userData = jwtDecode(credential.credential);
 

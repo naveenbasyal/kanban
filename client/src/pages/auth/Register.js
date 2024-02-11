@@ -11,6 +11,8 @@ import {
 } from "../../store/slices/authSlice";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "react-toastify";
+import { registerValidation } from "../../validation/authValidation";
+import { useFormik } from "formik";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -18,13 +20,28 @@ const Register = () => {
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
 
-  const [values, setValues] = useState({
-    username: "",
-    email: "",
-    password: "",
+  const {
+    handleChange,
+    handleSubmit,
+    values,
+    setValues,
+    errors,
+    touched,
+    handleBlur,
+  } = useFormik({
+    initialValues: {
+      username: "",
+      email: "",
+      password: "",
+    },
+    validationSchema: registerValidation,
+    onSubmit: (values) => {
+      console.log(values, "values");
+      handleRegister(values);
+    },
   });
 
-  const handleRegister = async () => {
+  const handleRegister = async (values) => {
     const data = await dispatch(
       RegisterUser({
         username: values.username,
@@ -32,12 +49,11 @@ const Register = () => {
         password: values.password,
       })
     );
+
     if (data?.payload?.token) {
-      navigate("/login");
-      toast.success("Please login to continue");
-      setValues({ username: "", email: "", password: "" });
+      navigate("/");
     } else {
-      toast.error("Register Failed");
+      toast.error(data?.payload || "Register Failed");
     }
   };
 
@@ -79,13 +95,7 @@ const Register = () => {
               <h1 className="font-bold leading-tight tracking-tight text-heading text-4xl ">
                 Create and account
               </h1>
-              <form
-                className="space-y-6"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleRegister();
-                }}
-              >
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
                   <label
                     htmlFor="username"
@@ -94,17 +104,21 @@ const Register = () => {
                     Your Name
                   </label>
                   <input
+                    autoComplete="off"
                     type="username"
                     name="username"
                     id="username"
                     value={values.username}
-                    onChange={(e) =>
-                      setValues({ ...values, username: e.target.value })
-                    }
+                    onChange={handleChange}
                     className="bg-gray-50 border border-gray-300 text-purple -900 sm:text-xl rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-4 "
                     placeholder="John Doe"
-                    required
+                    onBlur={handleBlur}
                   />
+                  {errors.username && touched.username && (
+                    <p className="text-red-500 ml-1 my-1 text-lg font-[500]">
+                      {errors.username && touched.username && errors.username}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -114,17 +128,21 @@ const Register = () => {
                     Your email
                   </label>
                   <input
+                    autoComplete="off"
                     type="email"
                     name="email"
                     id="email"
                     value={values.email}
-                    onChange={(e) =>
-                      setValues({ ...values, email: e.target.value })
-                    }
+                    onChange={handleChange}
+                    onBlur={handleBlur}
                     className="bg-gray-50 border border-gray-300 text-purple -900 sm:text-xl rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-4 "
                     placeholder="name@example.com"
-                    required
                   />
+                  {errors.email && touched.email && (
+                    <p className="text-red-500 ml-1 my-1 text-lg font-[500]">
+                      {errors.email && touched.email && errors.email}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -140,44 +158,77 @@ const Register = () => {
                     />
                   </label>
                   <input
+                    autoComplete="off"
                     type={show ? "text" : "password"}
                     name="password"
                     id="password"
+                    onBlur={handleBlur}
                     value={values.password}
-                    onChange={(e) =>
-                      setValues({ ...values, password: e.target.value })
-                    }
+                    onChange={handleChange}
                     placeholder="password"
-                    className="bg-gray-50 border border-gray-300 text-purple -900 sm:text-xl rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-4 "
-                    required
+                    className={`bg-gray-50 border ${
+                      errors.password && touched.password
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } text-purple  sm:text-xl rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-4 `}
                   />
                 </div>
 
-                <div className="flex items-start">
-                  <div className="flex items-center ">
+                {/* check if the password security completion is done uppercase , 6characters, numbers and show it in ui using checkboxed*/}
+
+                <div>
+                  <div className="flex items-start">
                     <input
-                      id="terms"
-                      aria-describedby="terms"
+                      autoComplete="off"
                       type="checkbox"
-                      className="w-5 mt-1 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 "
-                      required
+                      disabled
+                      name="uppercase"
+                      checked={values.password.match(/[A-Z]/g)}
+                      className="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 "
                     />
-                  </div>
-                  <div className="ml-3 text-xl">
                     <label
-                      htmlFor="terms"
-                      className="font-light text-purple -500 "
+                      htmlFor="uppercase"
+                      className="ml-3  text-lg text-purple cursor-pointer "
                     >
-                      I accept the{" "}
-                      <a
-                        className="font-medium text-blue-600 hover:underline "
-                        href="#"
-                      >
-                        Terms and Conditions
-                      </a>
+                      Include Uppercase
+                    </label>
+                  </div>
+
+                  <div className="flex items-start">
+                    <input
+                      autoComplete="off"
+                      type="checkbox"
+                      disabled
+                      name="sixCharacters"
+                      checked={values.password.length > 5}
+                      className="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 "
+                    />
+                    <label
+                      htmlFor="sixCharacters"
+                      className="ml-3  text-lg text-purple cursor-pointer "
+                    >
+                      Minimum 6 Characters
+                    </label>
+                  </div>
+
+                  <div className="flex items-start">
+                    <input
+                      autoComplete="off"
+                      disabled
+                      type="checkbox"
+                      name="numbers"
+                      checked={values.password.match(/[0-9]/g)}
+                      className="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 "
+                    />
+                    <label
+                      htmlFor="numbers"
+                      className="ml-3  text-lg text-purple cursor-not-allowed"
+                    >
+                      Include Numbers
                     </label>
                   </div>
                 </div>
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -198,7 +249,7 @@ const Register = () => {
                     "Register"
                   )}
                 </button>
-                <p className="text-xl font-light text-purple -500 ">
+                <p className="text-xl  text-purple -500 ">
                   Already have a new account?{" "}
                   <Link
                     to="/login"
