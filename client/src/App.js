@@ -52,7 +52,7 @@ export const badgeColors = {
 };
 
 const App = () => {
-  console.log("app env", process.env.REACT_APP_SERVER_URL);
+  
   const dispatch = useDispatch();
   const token = getToken();
   const { isAuthenticated } = useSelector((state) => state.auth);

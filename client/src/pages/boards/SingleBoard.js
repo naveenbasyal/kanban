@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import { badgeColors } from "../../App";
 import { AlignColumn, AlignRow, ThreeDots } from "../../components/svg";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { AiOutlineLoading, AiOutlineLoading3Quarters } from "react-icons/ai";
 import { toast } from "react-toastify";
 import {
   AssignTaskToMember,
@@ -47,7 +47,12 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
 
   // _______________ Get Projects ________________
   const { allProjects: projects } = useSelector((state) => state?.projects);
-  const { loading, assignLoading } = useSelector((state) => state?.task);
+  const { loading, assignLoading, deleteLoading } = useSelector(
+    (state) => state?.task
+  );
+  const { loading: boardLoading } = useSelector((state) => state?.board);
+
+  const { loading: mainLoading } = useSelector((state) => state?.projects);
   const { loading: columnLoading } = useSelector((state) => state?.column);
 
   // _______________ Project Owner Id ________________
@@ -101,70 +106,88 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
   useEffect(() => {
     // Listen for "Task" from the server
 
-    socket.on("taskCreated", (task) => {
-      dispatch(getAllProjects());
-      toast.info(`New task -> ${task.text}`);
+    socket.on("taskCreated", async (task) => {
+      const data = await dispatch(getAllProjects());
+      data?.payload && toast.info(`New task -> ${task.text}`);
     });
-    socket.on("taskDeleted", (task) => {
-      dispatch(getAllProjects());
-      toast.info(`Task Deleted -> ${task.text}`);
+    socket.on("taskDeleted", async (task) => {
+      const data = await dispatch(getAllProjects());
+
+      data?.payload && toast.info(`Task Deleted -> ${task.text}`);
     });
-    socket.on("taskUpdated", (task) => {
-      dispatch(getAllProjects());
-      toast.info(`Task Updated -> ${task.text}`);
+    // __________ Task __________
+    socket.on("taskUpdated", async (task) => {
+      const data = await dispatch(getAllProjects());
+      data?.payload && toast.info(`Task Updated -> ${task.text}`);
     });
-    socket.on("taskFlagged", (task) => {
-      dispatch(getAllProjects());
-      toast.info(`A Task is Flagged`);
+
+    socket.on("taskFlagged", async (task) => {
+      const data = await dispatch(getAllProjects());
+      data?.payload && toast.info(`A Task is Flagged`);
     });
-    socket.on("taskDraggedInSameColumn", (data) => {
-      dispatch(getAllProjects());
-      toast.info(`Task rearranged in the ${data?.column?.name} column`);
+
+    socket.on("taskDraggedInSameColumn", async (data) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload &&
+        toast.info(`Task rearranged in the ${data?.column?.name} column`);
     });
-    socket.on("taskAssigned", (data) => {
+
+    socket.on("taskAssigned", async (data) => {
+      const result = await dispatch(getAllProjects());
       if (data?._id) {
-        toast.info(`Task assigned to ${data?.username} `);
+        result?.payload && toast.info(`Task assigned to ${data?.username} `);
       } else {
-        toast.info(`Task unassigned`);
+        result?.payload && toast.info(`Task unassigned`);
       }
-      dispatch(getAllProjects());
     });
-    socket.on("taskDraggedInDifferentColumn", (data) => {
-      toast.info(
-        `Task rearranged from the ${data?.sourceColumn?.name} to ${data?.destinationColumn?.name} column`
-      );
-      dispatch(getAllProjects());
+
+    socket.on("taskDraggedInDifferentColumn", async (data) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload &&
+        toast.info(
+          `Task rearranged from the ${data?.sourceColumn?.name} to ${data?.destinationColumn?.name} column`
+        );
     });
+
     // _____________ Column _____________
-    socket.on("columnCreated", (column) => {
-      dispatch(getAllProjects());
-      toast.info(`New Column -> ${column?.name} `);
+    socket.on("columnCreated", async (column) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`New Column -> ${column?.name} `);
     });
-    socket.on("columnDeleted", (column) => {
-      dispatch(getAllProjects());
-      toast.info(`${column.name} column is deleted`);
+
+    socket.on("columnDeleted", async (column) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`${column.name} column is deleted`);
     });
-    socket.on("columnNameUpdated", (column) => {
-      dispatch(getAllProjects());
-      toast.info(`Column name is updated to ${column.name}`);
+
+    socket.on("columnNameUpdated", async (column) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`Column name is updated to ${column.name}`);
     });
-    socket.on("columnLimitUpdated", (column) => {
-      dispatch(getAllProjects());
-      toast.info(`${column.name} column limit is changed to ${column?.limit}`);
+
+    socket.on("columnLimitUpdated", async (column) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload &&
+        toast.info(
+          `${column.name} column limit is changed to ${column?.limit}`
+        );
     });
-    socket.on("columnDragged", (column) => {
-      dispatch(getAllProjects());
-      toast.info(`${column.name} column rearranged`);
+
+    socket.on("columnDragged", async (column) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`${column.name} column rearranged`);
     });
+
     // __________ Board ________
-    socket.on("boardUpdated", (board) => {
-      dispatch(getAllProjects());
-      toast.info(`"${board?.title}" board is updated`);
+    socket.on("boardUpdated", async (board) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`"${board?.title}" board is updated`);
     });
-    socket.on("boardDeleted", (board) => {
+
+    socket.on("boardDeleted", async (board) => {
       navigate(`/project/${projectId}`);
-      toast.info(`"${board?.title}" board is deleted`);
-      dispatch(getAllProjects());
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`"${board?.title}" board is deleted`);
     });
 
     return () => {
@@ -267,29 +290,33 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
   //  _______________ Handle Create Task ________________
   const handleCreateTask = async (columnId) => {
     if (task.trim() === "") return toast.error("Task can't be empty");
-
+    setBoard({
+      ...board,
+      columns: board?.columns?.map((col) => {
+        if (col._id === columnId) {
+          return {
+            ...col,
+            tasks: [
+              ...col.tasks,
+              {
+                text: task,
+                columnId,
+              },
+            ],
+          };
+        }
+        return col;
+      }),
+    });
+    setTask("");
+    setInputOpenId(null);
+    setInputOpen(false);
     const data = await dispatch(CreateNewTask({ text: task, columnId }));
 
     if (data?.payload?.task) {
       socket.emit("taskCreated", data.payload.task);
 
-      setBoard({
-        ...board,
-        columns: board?.columns?.map((col) => {
-          if (col._id === columnId) {
-            return {
-              ...col,
-              tasks: [...col.tasks, data.payload.task],
-            };
-          }
-          return col;
-        }),
-      });
-
       dispatch(getAllProjects());
-      setTask("");
-      setInputOpenId(null);
-      setInputOpen(false);
     }
   };
 
@@ -299,6 +326,18 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
 
     if (data?.payload?.task) {
       socket.emit("taskDeleted", data?.payload?.task);
+      setBoard({
+        ...board,
+        columns: board?.columns?.map((col) => {
+          if (col._id === columnId) {
+            return {
+              ...col,
+              tasks: col.tasks.filter((task) => task._id !== id),
+            };
+          }
+          return col;
+        }),
+      });
 
       dispatch(getAllProjects());
       setIsOpen(false);
@@ -575,7 +614,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
           <div className="flex items-center gap-5">
             <div
               title="Board name"
-              className="board-name-edit text-heading dark:text-slate-300 lg:text-[2.5rem] font-bold"
+              className="board-name-edit capitalize text-heading dark:text-slate-300 lg:text-[2.5rem] font-bold"
             >
               {board?.title}
             </div>
@@ -713,6 +752,15 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
               </button>
             </div>
           </div>
+          <div className="w-full h-2 text-slate-700 text-xl dark:text-slate-300 ml-1 mt-1">
+            <div className="flex h-2 gap-4 items-center">
+              {(mainLoading || loading || boardLoading ) && (
+                <>
+                  Loading <AiOutlineLoading className="animate-spin-fast .4s" />
+                </>
+              )}
+            </div>
+          </div>
         </div>
         {/* _________ Columns __________ */}
         <Droppable
@@ -754,10 +802,9 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                             !colInputOpen && setEditColId(col._id)
                           }
                           className={`border-b-4 rounded-md my-2 shadow-md  ${
-                            col?.limit !== null &&
-                            col.limit < col.tasks.length ?
-                            "bg-red-300 dark:bg-red-700 "
-                            : "bg-white dark:bg-slate-800"
+                            col?.limit !== null && col.limit < col.tasks.length
+                              ? "bg-red-300 dark:bg-red-700 "
+                              : "bg-white dark:bg-slate-800"
                           } ${
                             col.name == "Todo"
                               ? "border-blue-100 dark:border-slate-500"
@@ -1025,11 +1072,13 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                             )}
                                           </div>
                                           {/* _____ Text ____ */}
-                                          <div className={`cursor-default text-gray-700 ${
-                                            task?.flagged
-                                              ? "text-gray-600 dark:text-dark-400"
-                                              : "text-gray-700 dark:text-slate-200"
-                                          } task-name items-center text-xl my-1 rounded-lg flex gap-5 `}>
+                                          <div
+                                            className={`cursor-default text-gray-700 ${
+                                              task?.flagged
+                                                ? "text-gray-600 dark:text-dark-400"
+                                                : "text-gray-700 dark:text-slate-200"
+                                            } task-name items-center text-xl my-1 rounded-lg flex gap-5 `}
+                                          >
                                             {task.text}
                                           </div>
                                           {/* _______ Extras ______ */}
@@ -1046,6 +1095,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                   />
                                                 </div>
                                               )}
+
                                               {/* _______________ Task Assigning _____________ */}
                                               <div
                                                 id="menu-button"
@@ -1248,7 +1298,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                               >
                                 {loading ? (
                                   <AiOutlineLoading3Quarters
-                                    className="animate-spin"
+                                    className="animate-spin-fast"
                                     size={16}
                                   />
                                 ) : col?.createdBy === myprofile?._id ? (

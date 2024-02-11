@@ -5,6 +5,9 @@ module.exports = {
       backgroundColor: {
         purple: "#ebf1ff",
       },
+      animation:{
+        'spin-fast' :'spin .5s linear infinite'
+      },
       textColor: {
         purple: "#5a5b80",
         heading: "#0D0F43",

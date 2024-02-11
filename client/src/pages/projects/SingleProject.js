@@ -46,29 +46,35 @@ const SingleProject = ({ setAllProjects }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    socket.on("boardCreated", (board) => {
-      dispatch(getAllProjects());
-      toast.info(`"${board?.title}" board is created`);
+    // __________ Board __________
+    socket.on("boardCreated", async (board) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`"${board?.title}" board is created`);
     });
-    socket.on("boardUpdated", (board) => {
-      dispatch(getAllProjects());
-      toast.info(`"${board?.title}" board is updated`);
+
+    socket.on("boardUpdated", async (board) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`"${board?.title}" board is updated`);
     });
-    socket.on("boardDeleted", (board) => {
-      dispatch(getAllProjects());
-      toast.info(`"${board?.title}" board is deleted`);
+
+    socket.on("boardDeleted", async (board) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`"${board?.title}" board is deleted`);
     });
+
     // __________ Project ___________
-
-    socket.on("projectUpdated", (project) => {
-      dispatch(getAllProjects());
-      dispatch(getAllUserProjects());
-      toast.info(`"${project?.title}" project is updated`);
+    socket.on("projectUpdated", async (project) => {
+      const result = await Promise.all([
+        dispatch(getAllProjects()),
+        dispatch(getAllUserProjects()),
+      ]);
+      result.every((res) => res?.payload) &&
+        toast.info(`"${project?.title}" project is updated`);
     });
 
-    socket.on("projectDeleted", (project) => {
-      dispatch(getAllProjects());
-      toast.info(`"${project?.title}" project is deleted`);
+    socket.on("projectDeleted", async (project) => {
+      const result = await dispatch(getAllProjects());
+      result?.payload && toast.info(`"${project?.title}" project is deleted`);
       navigate("/");
     });
 
@@ -101,7 +107,7 @@ const SingleProject = ({ setAllProjects }) => {
             <div className="name-edit flex flex-col gap-3">
               {/* -------- Name -------- */}
               <div className="flex items-center">
-                <div className="text-heading dark:text-slate-300 lg:text-[2.5rem] font-bold">
+                <div className="text-heading capitalize dark:text-slate-300 lg:text-[2.5rem] font-bold">
                   {project.title}
                 </div>
                 <button
@@ -199,7 +205,6 @@ const SingleProject = ({ setAllProjects }) => {
                     <path
                       d="M12 22.6667V9.33332M12 22.6667C12 23.3739 11.719 24.0522 11.219 24.5523C10.7189 25.0524 10.0406 25.3333 9.33333 25.3333H6.66667C5.95942 25.3333 5.28115 25.0524 4.78105 24.5523C4.28095 24.0522 4 23.3739 4 22.6667V9.33332C4 8.62608 4.28095 7.9478 4.78105 7.4477C5.28115 6.94761 5.95942 6.66666 6.66667 6.66666H9.33333C10.0406 6.66666 10.7189 6.94761 11.219 7.4477C11.719 7.9478 12 8.62608 12 9.33332M12 22.6667C12 23.3739 12.281 24.0522 12.781 24.5523C13.2811 25.0524 13.9594 25.3333 14.6667 25.3333H17.3333C18.0406 25.3333 18.7189 25.0524 19.219 24.5523C19.719 24.0522 20 23.3739 20 22.6667M12 9.33332C12 8.62608 12.281 7.9478 12.781 7.4477C13.2811 6.94761 13.9594 6.66666 14.6667 6.66666H17.3333C18.0406 6.66666 18.7189 6.94761 19.219 7.4477C19.719 7.9478 20 8.62608 20 9.33332M20 22.6667V9.33332M20 22.6667C20 23.3739 20.281 24.0522 20.781 24.5523C21.2811 25.0524 21.9594 25.3333 22.6667 25.3333H25.3333C26.0406 25.3333 26.7189 25.0524 27.219 24.5523C27.719 24.0522 28 23.3739 28 22.6667V9.33332C28 8.62608 27.719 7.9478 27.219 7.4477C26.7189 6.94761 26.0406 6.66666 25.3333 6.66666H22.6667C21.9594 6.66666 21.2811 6.94761 20.781 7.4477C20.281 7.9478 20 8.62608 20 9.33332"
                       className="stroke-[#5A5B80] dark:stroke-slate-300"
-
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"

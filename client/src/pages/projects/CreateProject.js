@@ -10,6 +10,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { toast } from "react-toastify";
 import { useFormik } from "formik";
 import { createValidation } from "../../validation/CreateValidations";
+import { AiOutlineLoading } from "react-icons/ai";
 
 const CreateProject = ({
   setCreateProject,
@@ -34,11 +35,12 @@ const CreateProject = ({
     },
     validationSchema: createValidation,
     onSubmit: (values) => {
-      console.log(values, "values");
       handleCreate(values);
     },
   });
-  const { loading, error, projects } = useSelector((state) => state.projects);
+  const { createLoading, error, projects } = useSelector(
+    (state) => state.projects
+  );
 
   const handleCreate = async (values) => {
     const data = await dispatch(createNewProject(values));
@@ -144,7 +146,14 @@ const CreateProject = ({
                       className="inline-flex w-full justify-center rounded-md bg-red-600 px-5 py-4 text-xl font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
                       onClick={handleSubmit}
                     >
-                      {loading ? "Creating..." : "Create"}
+                      {createLoading ? (
+                        <span className="flex items-center gap-3">
+                          Creating{" "}
+                          <AiOutlineLoading className="animate-spin-fast" size={14} />
+                        </span>
+                      ) : (
+                        "Create"
+                      )}
                     </button>
                     <button
                       type="button"

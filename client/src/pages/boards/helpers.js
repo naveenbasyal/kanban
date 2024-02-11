@@ -123,7 +123,7 @@ export const TaskEditorTool = ({
 }) => {
   const dispatch = useDispatch();
   const { user } = useUser();
-  const { editLoading } = useSelector((state) => state?.task);
+  const { editLoading,deleteLoading } = useSelector((state) => state?.task);
 
   const handleAddFlag = async () => {
     const data = await dispatch(
@@ -239,7 +239,7 @@ origin-top-right rounded-md bg-white dark:bg-slate-800 dark:ring-slate-600 shado
             tabIndex="-1"
             id="menu-item-0"
           >
-            {loading ? (
+            {deleteLoading ? (
               <AiOutlineLoading3Quarters size={16} className="animate-spin" />
             ) : (
               <AiOutlineDelete size={16} />

@@ -27,7 +27,6 @@ const Navbar = ({ openProfile, setOpenProfile }) => {
     }
   };
 
-  console.log(theme, "theme");
   useEffect(() => {
     localStorage.setItem("theme", theme);
     document.documentElement.className = theme;

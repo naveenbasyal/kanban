@@ -13,7 +13,7 @@ const DeleteProjectOverlay = ({
   setDeleteProject,
   deleteProjectById,
 }) => {
-  const { loading } = useSelector((state) => state.projects);
+  const { deleteLoading } = useSelector((state) => state.projects);
   const [open, setOpen] = useState(false);
 
   const cancelButtonRef = useRef(null);
@@ -84,7 +84,7 @@ const DeleteProjectOverlay = ({
                     className="inline-flex lg:w-[7rem] justify-center rounded-md bg-red-600 px-5 py-4 text-xl font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3  sm:w-auto"
                     onClick={deleteProjectById}
                   >
-                    {loading ? (
+                    {deleteLoading ? (
                       <AiOutlineLoading3Quarters
                         size={16}
                         className="animate-spin text-white "

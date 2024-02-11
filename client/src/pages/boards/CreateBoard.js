@@ -15,6 +15,7 @@ import {
 import io from "socket.io-client";
 import { useFormik } from "formik";
 import { createValidation } from "../../validation/CreateValidations";
+import { AiOutlineLoading } from "react-icons/ai";
 
 const socket = io(`${process.env.REACT_APP_SERVER_URL}`, {
   transports: ["websocket"],
@@ -29,8 +30,8 @@ const CreateBoard = ({
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
   const projectId = useParams()?.projectId;
-
-  const { loading, error, projects } = useSelector((state) => state.board);
+  console.log("create board", project);
+  const { loading } = useSelector((state) => state.board);
 
   const {
     handleChange,
@@ -47,7 +48,7 @@ const CreateBoard = ({
     },
     validationSchema: createValidation,
     onSubmit: (values) => {
-      console.log(values, "values");
+      
       handleCreate(values);
     },
   });
@@ -170,7 +171,17 @@ const CreateBoard = ({
                       className="inline-flex w-full justify-center rounded-md bg-red-600 px-5 py-4 text-xl font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
                       onClick={handleSubmit}
                     >
-                      {loading ? "Creating..." : "Create"}
+                      {loading ? (
+                        <span className="flex items-center gap-3">
+                          Creating{" "}
+                          <AiOutlineLoading
+                            className="animate-spin-fast"
+                            size={14}
+                          />
+                        </span>
+                      ) : (
+                        "Create"
+                      )}
                     </button>
                     <button
                       type="button"
