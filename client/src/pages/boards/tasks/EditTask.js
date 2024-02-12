@@ -23,7 +23,6 @@ const socket = io(`${process.env.REACT_APP_SERVER_URL}`, {
 const EditTaskOverlay = ({
   TaskToEdit: { text, _id, labels, flagged },
   setTaskToEdit,
-
   setEditTaskId,
   board,
   setBoard,
@@ -49,6 +48,23 @@ const EditTaskOverlay = ({
   const handleUpdateTask = async () => {
     if (values.text.trim().length === 0)
       return toast.error("Task name is required");
+    setBoard({
+      ...board,
+      columns: board.columns.map((column) => {
+        return {
+          ...column,
+          tasks: column.tasks.map((task) => {
+            if (task._id === _id) {
+              return { ...task, text: values.text, labels: values.labels };
+            }
+            return task;
+          }),
+        };
+      }),
+    });
+    setTaskToEdit({});
+    setOpen(false);
+    setEditTaskId(null);
     const data = await dispatch(
       updateTaskById({
         taskId: _id,
@@ -62,24 +78,7 @@ const EditTaskOverlay = ({
       dispatch(getAllProjects());
       socket.emit("taskUpdated", data?.payload?.updatedTask);
 
-      setBoard({
-        ...board,
-        columns: board.columns.map((column) => {
-          return {
-            ...column,
-            tasks: column.tasks.map((task) => {
-              if (task._id === _id) {
-                return { ...task, text: values.text, labels: values.labels };
-              }
-              return task;
-            }),
-          };
-        }),
-      });
-      setTaskToEdit({});
-      setOpen(false);
       setValues({ text: "", labels: [], flagged: false });
-      setEditTaskId(null);
     }
   };
 

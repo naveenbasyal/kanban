@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Fragment, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -20,6 +20,8 @@ const CreateColumn = ({
   boardId,
   toggleCreateColumn,
   setToggleCreateColumn,
+  setBoard,
+  board,
 }) => {
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
@@ -29,15 +31,21 @@ const CreateColumn = ({
   const [columnName, setColumnName] = useState("");
 
   const handleCreate = async () => {
+    const isExist = board?.columns.find((col) => col.name === columnName);
+    if (isExist) return toast.error("Column already exist.");
     if (!columnName) return toast.error("Column name is must.");
 
+    setBoard({
+      ...board,
+      columns: [...board?.columns, { name: columnName, tasks: [], boardId }],
+    });
+    setColumnName("");
+    setToggleCreateColumn(false);
     const data = await dispatch(CreateNewColumn({ name: columnName, boardId }));
 
     if (data.payload) {
       socket.emit("columnCreated", data.payload);
       dispatch(getAllProjects());
-      setColumnName("");
-      setToggleCreateColumn(false);
     } else {
       toast.error("Something went wrong");
     }

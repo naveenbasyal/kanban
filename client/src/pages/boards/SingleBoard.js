@@ -123,7 +123,8 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
 
     socket.on("taskFlagged", async (task) => {
       const data = await dispatch(getAllProjects());
-      data?.payload && toast.info(`A Task is Flagged`);
+      data?.payload &&
+        toast.info(`A Task is ${task.flagged ? "Flagged" : "Unflagged"}`);
     });
 
     socket.on("taskDraggedInSameColumn", async (data) => {
@@ -322,22 +323,22 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
 
   //  _______________ Handle Delete Task ________________
   const handleDeleteTask = async (id, columnId) => {
+    setBoard({
+      ...board,
+      columns: board?.columns?.map((col) => {
+        if (col._id === columnId) {
+          return {
+            ...col,
+            tasks: col.tasks.filter((task) => task._id !== id),
+          };
+        }
+        return col;
+      }),
+    });
     const data = await dispatch(DeleteTaskById({ id, columnId }));
 
     if (data?.payload?.task) {
       socket.emit("taskDeleted", data?.payload?.task);
-      setBoard({
-        ...board,
-        columns: board?.columns?.map((col) => {
-          if (col._id === columnId) {
-            return {
-              ...col,
-              tasks: col.tasks.filter((task) => task._id !== id),
-            };
-          }
-          return col;
-        }),
-      });
 
       dispatch(getAllProjects());
       setIsOpen(false);
@@ -351,6 +352,13 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
       toast.error("You can't delete the last column");
       return;
     }
+    const newColumns = board?.columns?.filter((col) => col._id !== columnId);
+
+    const newBoard = {
+      ...board,
+      columns: newColumns,
+    };
+    setBoard(newBoard);
     const data = await dispatch(
       DeleteColumnById({ columnId, boardId: board._id })
     );
@@ -360,13 +368,6 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
       dispatch(getAllProjects());
       setIsOpen(false);
       setOpenId(null);
-      const newColumns = board?.columns?.filter((col) => col._id !== columnId);
-
-      const newBoard = {
-        ...board,
-        columns: newColumns,
-      };
-      setBoard(newBoard);
     }
   };
 
@@ -752,9 +753,10 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
               </button>
             </div>
           </div>
+          {/* __________ Loading ____________ */}
           <div className="w-full h-2 text-slate-700 text-xl dark:text-slate-300 ml-1 mt-1">
             <div className="flex h-2 gap-4 items-center">
-              {(mainLoading || loading || boardLoading ) && (
+              {(mainLoading || loading || boardLoading) && (
                 <>
                   Loading <AiOutlineLoading className="animate-spin-fast .4s" />
                 </>
@@ -1039,7 +1041,11 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
                                                   return (
                                                     <span
                                                       key={`${label}-${index}`}
-                                                      className={`inline-flex items-center rounded-md  px-2 py-1 text-sm capitalize font-medium text-purple border-[.5px] border-gray-200`}
+                                                      className={`inline-flex items-center ${
+                                                        task?.flagged
+                                                          ? "dark:text-slate-500 border-[.5px] border-gray-400"
+                                                          : "dark:text-slate-300 border-[.5px] border-gray-200"
+                                                      } rounded-md  px-2 py-1 text-sm capitalize font-medium text-purple `}
                                                     >
                                                       {label}
                                                     </span>
@@ -1353,6 +1359,8 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
         {toggleCreateColumn && (
           <CreateColumn
             boardId={board?._id}
+            setBoard={setBoard}
+            board={board}
             toggleCreateColumn={toggleCreateColumn}
             setToggleCreateColumn={setToggleCreateColumn}
           />

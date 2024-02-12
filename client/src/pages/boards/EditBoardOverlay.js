@@ -26,6 +26,8 @@ const EditBoardOverlay = ({
   setToggleEditBoard,
   toggleEditBoard: { title, description, _id, status },
   board,
+  setProject,
+  project,
   setBoard,
 }) => {
   const dispatch = useDispatch();
@@ -47,8 +49,17 @@ const EditBoardOverlay = ({
         title: values.title,
         description: values.description,
       });
+    } else {
+      setProject({
+        ...project,
+        boards: project?.boards.map((b) =>
+          b._id === _id
+            ? { ...b, status: values.status, title: values.title }
+            : b
+        ),
+      });
     }
-
+    setToggleEditBoard(false);
     const data = await dispatch(
       UpdateBoardNameOrDescription({
         boardId: _id,
@@ -61,7 +72,6 @@ const EditBoardOverlay = ({
       socket.emit("boardUpdated", data.payload?.board);
       dispatch(getAllProjects());
       dispatch(getAllUserProjects());
-      setToggleEditBoard(false);
       setValues({ title: "", description: "" });
     } else {
       toast.error(data?.payload?.message);

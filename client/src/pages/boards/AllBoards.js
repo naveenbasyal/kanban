@@ -188,7 +188,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                             className={`flex gap-3 ${
                               board?.createdBy !== user?._id &&
                               project?.userId?._id !== user?._id
-                                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                                ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-slate-600 dark:text-slate-500"
                                 : "hover:text-indigo-500 dark:text-slate-300 hover:dark:bg-slate-700 text-gray-700 hover:bg-gray-100"
                             }  
                            items-center px-4 py-2 text-xl `}
@@ -225,7 +225,7 @@ const AllBoards = ({ boards, project, setProject }) => {
                             className={`${
                               board?.createdBy !== user?._id &&
                               project?.userId?._id !== user?._id
-                                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                                ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-slate-600 dark:text-slate-500"
                                 : "text-red-500"
                             } flex items-center gap-3 dark:hover:bg-slate-700 px-4 py-2 text-xl
                            hover:bg-gray-100`}
@@ -298,6 +298,8 @@ const AllBoards = ({ boards, project, setProject }) => {
       ) : null}
       {toggleEditBoard && (
         <EditBoardOverlay
+          setProject={setProject}
+          project={project}
           setToggleEditBoard={setToggleEditBoard}
           toggleEditBoard={toggleEditBoard}
         />

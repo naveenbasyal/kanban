@@ -121,7 +121,7 @@ const App = () => {
     <div className="flex h-screen">
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={1500}
         className="z-50 text-2xl"
         hideProgressBar={false}
         newestOnTop={true}

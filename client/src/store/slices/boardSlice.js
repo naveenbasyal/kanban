@@ -151,6 +151,16 @@ const boardSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     });
+    builder.addCase(UpdateBoardNameOrDescription.pending, (state, action) => {
+      state.loading = true;
+    });
+    builder.addCase(UpdateBoardNameOrDescription.fulfilled, (state, action) => {
+      state.loading = false;
+    });
+    builder.addCase(UpdateBoardNameOrDescription.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
   },
 });
 

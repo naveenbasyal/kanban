@@ -30,6 +30,7 @@ const EditProjectOverlay = ({
   setProject,
   project,
   setAllProjects,
+  
 }) => {
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
