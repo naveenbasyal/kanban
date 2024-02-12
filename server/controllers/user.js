@@ -52,7 +52,6 @@ const RegisterUser = async (req, res) => {
     await FirstProject.save();
     await user.save();
 
-    
     // create a column for the First board
     const defaultColumns = ["Todo", "In Progress", "Done"];
 
@@ -68,7 +67,6 @@ const RegisterUser = async (req, res) => {
 
     await FirstBoard.save();
     await user.save();
-
 
     res.status(201).json({
       user,
@@ -181,6 +179,49 @@ const googleLogin = async (req, res) => {
         });
 
         await user.save();
+        
+        const FirstProject = new Project({
+          title: "My First Project",
+          description:
+            "This is your first project, you can create boards and tasks to manage your project",
+          userId: user._id,
+        });
+        await FirstProject.save();
+
+        // push project Id to the user's projects array
+        user.projects.push(FirstProject._id);
+        await user.save();
+
+        // create a board for the First project
+        const FirstBoard = new Board({
+          title: "My First Board",
+          description:
+            "This is your first board, you can create tasks and add more columns to manage your project",
+          projectId: FirstProject._id,
+          createdBy: user?._id,
+        });
+        await FirstBoard.save();
+        // push board Id to the project's boards array
+        await FirstProject.boards.push(FirstBoard._id);
+        await FirstProject.save();
+        await user.save();
+
+        // create a column for the First board
+        const defaultColumns = ["Todo", "In Progress", "Done"];
+
+        for (let i = 0; i < defaultColumns.length; i++) {
+          const newColumn = new Column({
+            name: defaultColumns[i],
+            boardId: FirstBoard._id,
+            createdBy: user?._id,
+          });
+          await newColumn.save();
+          FirstBoard.columns.push(newColumn._id);
+        }
+
+        await FirstBoard.save();
+        await user.save();
+
         return res.status(200).json({
           message: "User logged in successfully",
           user: user,
