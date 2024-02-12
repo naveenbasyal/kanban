@@ -170,7 +170,7 @@ const Login = () => {
                   {loading ? (
                     <AiOutlineLoading3Quarters
                       size={20}
-                      className="animate-spin text-2xl "
+                      className="animate-spin-fast text-2xl "
                     />
                   ) : (
                     "Login"
