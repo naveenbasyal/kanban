@@ -119,9 +119,6 @@ const App = () => {
     const allBoardsFlat = allProjects?.map((project) => project?.boards).flat();
     setAllBoards(allBoardsFlat);
   }, [allProjects]);
-  useEffect(() => {
-    console.log("user", user);
-  }, [user]);
 
   return (
     <div className="flex h-screen">
@@ -137,7 +134,7 @@ const App = () => {
         draggable
         pauseOnHover
       />
-      {!user?._id && <PreLoader />}
+      {isAuthenticated && !user?._id && <PreLoader />}
       {isAuthenticated && (
         <Sidebar
           allBoards={allBoards}
