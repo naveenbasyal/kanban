@@ -38,7 +38,7 @@ export default function AllFeedbacks() {
     const getAllFeedbacks = async () => {
       try {
         setLoading(true);
-        const response = await fetch("http://localhost:8000/api/feedback", {
+        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/feedback`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

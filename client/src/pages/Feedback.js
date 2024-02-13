@@ -27,14 +27,17 @@ const Feedback = () => {
         const { title, message } = values;
         try {
           setLoading(true);
-          const response = await fetch(`http://localhost:8000/api/feedback`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-            body: JSON.stringify({ title, message }),
-          });
+          const response = await fetch(
+            `${process.env.REACT_APP_SERVER_URL}/api/feedback`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ title, message }),
+            }
+          );
           const data = await response.json();
           if (data.message) {
             toast.info(data.message, {
