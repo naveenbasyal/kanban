@@ -22,6 +22,8 @@ import MyProfile from "./pages/user/MyProfile";
 import { useUser } from "./Context/userContext";
 import Feedback from "./pages/Feedback";
 import AllFeedbacks from "./pages/AllFeedbacks";
+import PreLoader from "./components/ui/PreLoader";
+import People from "./pages/user/People";
 export const badgeColors = {
   gray: { bg: "bg-gray-50", text: "text-gray-600", ring: "ring-gray-500/10" },
   red: { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-600/10" },
@@ -117,6 +119,9 @@ const App = () => {
     const allBoardsFlat = allProjects?.map((project) => project?.boards).flat();
     setAllBoards(allBoardsFlat);
   }, [allProjects]);
+  useEffect(() => {
+    console.log("user", user);
+  }, [user]);
 
   return (
     <div className="flex h-screen">
@@ -132,6 +137,7 @@ const App = () => {
         draggable
         pauseOnHover
       />
+      {!user?._id && <PreLoader />}
       {isAuthenticated && (
         <Sidebar
           allBoards={allBoards}
@@ -174,6 +180,7 @@ const App = () => {
                   element={<SingleBoard />}
                 />
                 <Route path="/feedback" element={<Feedback />} />
+                <Route path="/people" element={<People />} />
                 {isAdmin && (
                   <Route path="/all-feedbacks" element={<AllFeedbacks />} />
                 )}

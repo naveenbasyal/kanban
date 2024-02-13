@@ -5,8 +5,11 @@ module.exports = {
       backgroundColor: {
         purple: "#ebf1ff",
       },
-      animation:{
-        'spin-fast' :'spin .5s linear infinite'
+      animation: {
+        "spin-fast": "spin .5s linear infinite",
+        "ping-fast": "ping .5s linear infinite",
+        "pulse-fast": "pulse .8s linear infinite",
+        "bounce-fast": "bounce .5s linear infinite",
       },
       textColor: {
         purple: "#5a5b80",

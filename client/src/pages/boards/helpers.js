@@ -85,7 +85,7 @@ export const ColumnEditorTool = ({
             onClick={() => handleDeleteColumn(col._id)}
             className={`${
               col?.createdBy !== user?._id && projectOwnerId !== user?._id
-                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-slate-700"
                 : (col?.createdBy === user?._id ||
                     projectOwnerId === user?._id) &&
                   "text-red-500 hover:bg-gray-100 dark:hover:bg-slate-700 "
@@ -123,7 +123,7 @@ export const TaskEditorTool = ({
 }) => {
   const dispatch = useDispatch();
   const { user } = useUser();
-  const { editLoading,deleteLoading } = useSelector((state) => state?.task);
+  const { editLoading, deleteLoading } = useSelector((state) => state?.task);
 
   const handleAddFlag = async () => {
     const data = await dispatch(
@@ -191,7 +191,7 @@ origin-top-right rounded-md bg-white dark:bg-slate-800 dark:ring-slate-600 shado
             }}
             className={`${
               task?.createdBy !== user?._id && projectOwnerId !== user?._id
-                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-slate-700 dark:text-slate-600"
                 : (task?.createdBy === user?._id ||
                     projectOwnerId === user?._id) &&
                   "text-gray-700 hover:text-indigo-500 dark:text-slate-300 "
@@ -229,7 +229,7 @@ origin-top-right rounded-md bg-white dark:bg-slate-800 dark:ring-slate-600 shado
             onClick={() => handleDeleteTask(task._id, col._id)}
             className={`${
               task?.createdBy !== user?._id && projectOwnerId !== user?._id
-                ? "cursor-not-allowed bg-gray-100 text-gray-300"
+                ? "cursor-not-allowed bg-gray-100 text-gray-300 dark:bg-slate-700 dark:text-slate-600"
                 : (task?.createdBy === user?._id ||
                     projectOwnerId === user?._id) &&
                   "text-red-500"

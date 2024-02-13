@@ -196,7 +196,6 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
             />
           </div>
         </div>
-
         <div className="search-filters w-full my-10">
           <div className="flex gap-10">
             <div className="relative flex items-center w-1/4">
@@ -223,16 +222,15 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
             />
           </div>
         </div>
-
-        {loading ? (
-          <div className="w-full my-4 text-slate-700 text-xl dark:text-slate-400">
+        <div className="w-full my-10 text-slate-500 h-2 text-xl dark:text-slate-400">
+          {loading && (
             <div className="flex gap-4 items-center">
               Loading projects{" "}
               <AiOutlineLoading className="animate-spin-fast .4s" />
             </div>
-          </div>
-        ) : // {/*  ----------- All projects List ----------- */}
-        allProjects?.length === 0 ? (
+          )}
+        </div>
+        {!loading && allProjects?.length === 0 ? (
           <div className="flex flex-col mt-[8rem] items-center justify-center gap-5 text-2xl text-gray-400">
             <NotFound width={140} />
             <div>Start creating projects to see them here.</div>
@@ -264,7 +262,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                             {item?.userId?._id !== user._id ? (
                               <FaShare
                                 title={`Shared by ${item?.userId?.username}`}
-                                size={20}
+                                size={17}
                                 className="text-gray-400 cursor-pointer"
                               />
                             ) : (
@@ -274,8 +272,8 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                                 onClick={() => handleStarred(item._id)}
                               >
                                 <svg
-                                  height="16"
-                                  width="17"
+                                  height="15"
+                                  width="15"
                                   xmlns="http://www.w3.org/2000/svg"
                                   viewBox="0 0 47.94 47.94"
                                 >
@@ -295,7 +293,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                           <td>
                             <Link
                               to={`/projects/${item?._id}`}
-                              className="text-blue-500 flex items-center gap-5"
+                              className="text-blue-500 flex items-center gap-5 tracking-wide text-[1.35rem]"
                             >
                               {item?.title}
                             </Link>
@@ -303,7 +301,7 @@ const AllProjects = ({ allProjects, setAllProjects }) => {
                           <td
                             title={item?.description}
                             className={`
-                                w-2/5
+                                
                             ${
                               item?.description
                                 ? "text-gray-600 dark:text-slate-400"

@@ -98,7 +98,7 @@ const Sidebar = ({
               />
             </svg>
           ),
-          link: "#",
+          link: "/people",
         },
         {
           name: "Feedback/Query",
@@ -128,8 +128,8 @@ const Sidebar = ({
   return (
     <div
       className="sidebar  gap-12 items-start flex flex-col min-w-[30rem]
-     max-w-[30rem] px-[1.8rem] py-[2.4rem] h-[100vh] bg-purple 
-      dark:bg-slate-900 dark:border-r-[1px] dark:border-r-slate-700"
+     max-w-[30rem] px-[1.8rem] py-[2.4rem] h-[100vh] bg-indigo-50 
+      dark:bg-slate-900 dark:border-r-[1px] dark:border-r-slate-800"
     >
       <div className="brand-name">
         <Link

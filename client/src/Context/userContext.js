@@ -15,7 +15,7 @@ const UserProvider = ({ children }) => {
   const token = localStorage.getItem("token");
   const { isAuthenticated } = useSelector((state) => state.auth);
 
-  const [user, setUser] = useState([]);
+  const [user, setUser] = useState({});
 
   useEffect(() => {
     if (token) {
