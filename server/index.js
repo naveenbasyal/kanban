@@ -3,11 +3,11 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const app = express();
-const http = require("http"); 
+const http = require("http");
 
 const socketIO = require("socket.io");
-const server = http.createServer(app); 
-const io = socketIO(server); 
+const server = http.createServer(app);
+const io = socketIO(server);
 
 const PORT = process.env.PORT || 8000;
 
@@ -17,8 +17,8 @@ const projectRoutes = require("./routes/projectRoutes");
 const boardRoutes = require("./routes/boardRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const columnRoutes = require("./routes/columnRoutes");
+const feedbackRoute = require("./routes/feedback");
 const verifyToken = require("./middlewares/verifyToken");
-
 
 dotenv.config();
 app.use(express.json());
@@ -119,5 +119,4 @@ app.use("/api/project", projectRoutes);
 app.use("/api/board", verifyToken, boardRoutes);
 app.use("/api/column", verifyToken, columnRoutes);
 app.use("/api/task", verifyToken, taskRoutes);
-
-
+app.use("/api/feedback", verifyToken, feedbackRoute);
