@@ -31,7 +31,7 @@ const Feedback = () => {
         try {
           setLoading(true);
           const response = await fetch(
-            `${process.env.REACT_APP_SERVER_URL}/apia/feedback`,
+            `${process.env.REACT_APP_SERVER_URL}/api/feedback`,
             {
               method: "POST",
               headers: {
