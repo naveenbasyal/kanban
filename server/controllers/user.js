@@ -91,7 +91,7 @@ const LoginUser = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
-      return res.status(400).send("Invalid credentials");
+      return res.status(400).send({ message: "Invalid credentials" });
     }
     return res.status(200).json({
       user,
@@ -179,7 +179,7 @@ const googleLogin = async (req, res) => {
         });
 
         await user.save();
-        
+
         const FirstProject = new Project({
           title: "My First Project",
           description:
