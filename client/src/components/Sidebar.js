@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 import { ActiveIndicator, FinishedIndicator, PausedIndicator } from "./svg";
-
+import { useUser } from "../Context/userContext";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { useSelector } from "react-redux";
 
 const Sidebar = ({
   allBoards,
@@ -12,7 +13,7 @@ const Sidebar = ({
   setSelectedBoard,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const { isAdmin } = useSelector((state) => state.auth);
   const handleDropdown = (e) => {
     e.stopPropagation();
     setIsDropdownOpen(!isDropdownOpen);
@@ -100,7 +101,7 @@ const Sidebar = ({
           link: "#",
         },
         {
-          name: "My Tasks",
+          name: "Feedback/Query",
           icon: (
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -118,7 +119,7 @@ const Sidebar = ({
               />
             </svg>
           ),
-          link: "#",
+          link: "/feedback",
         },
       ],
     },
@@ -312,6 +313,33 @@ const Sidebar = ({
                   </li>
                 </Link>
               ))}
+              {isAdmin && (
+                <Link
+                  to="/all-feedbacks"
+                  className="text-purple dark:text-slate-300 hover:bg-indigo-100 dark:hover:bg-slate-800 py-2 px-3 rounded-md"
+                >
+                  <li className="flex items-center gap-5">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <path
+                        d="M12 4.354C12.5374 3.7447 13.2477 3.31351 14.0362 3.11779C14.8247 2.92208 15.6542 2.97112 16.4142 3.2584C17.1741 3.54568 17.8286 4.05757 18.2905 4.72596C18.7524 5.39435 18.9998 6.18754 18.9998 7C18.9998 7.81246 18.7524 8.60565 18.2905 9.27404C17.8286 9.94243 17.1741 10.4543 16.4142 10.7416C15.6542 11.0289 14.8247 11.0779 14.0362 10.8822C13.2477 10.6865 12.5374 10.2553 12 9.646V4.354ZM15 21H3V20C3 18.4087 3.63214 16.8826 4.75736 15.7574C5.88258 14.6321 7.4087 14 9 14C10.5913 14 12.1174 14.6321 13.2426 15.7574C14.3679 16.8826 15 18.4087 15 20V21ZM15 21H21V20C21.0001 18.9467 20.723 17.9119 20.1965 16.9997C19.6699 16.0875 18.9125 15.3299 18.0004 14.8032C17.0882 14.2765 16.0535 13.9992 15.0002 13.9992C13.9469 13.9991 12.9122 14.2764 12 14.803L15 21ZM13 7C13 8.06087 12.5786 9.07828 11.8284 9.82843C11.0783 10.5786 10.0609 11 9 11C7.93913 11 6.92172 10.5786 6.17157 9.82843C5.42143 9.07828 5 8.06087 5 7C5 5.93913 5.42143 4.92172 6.17157 4.17157C6.92172 3.42143 7.93913 3 9 3C10.0609 3 11.0783 3.42143 11.8284 4.17157C12.5786 4.92172 13 5.93913 13 7V7Z"
+                        className="stroke-[#5A5B80] dark:stroke-slate-300"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="text-[1.4rem] font-medium">
+                      All Feedbacks
+                    </span>
+                  </li>
+                </Link>
+              )}
             </ul>
           </div>
         ))}

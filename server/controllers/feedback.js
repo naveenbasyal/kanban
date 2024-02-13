@@ -2,6 +2,7 @@ const Feedback = require("../models/feedback");
 
 const postFeedback = async (req, res) => {
   const { title, message } = req.body;
+
   const userId = req.user.id;
   if (!title || !message) {
     return res.status(400).json({ error: "All fields are required" });
@@ -23,7 +24,7 @@ const getAllFeedbacks = async (req, res) => {
   }
   try {
     const feedbacks = await Feedback.find()
-      .populate("userId", "username email")
+      .populate("userId", "username email profilePicture")
       .sort("-createdAt");
     res.status(200).json({ feedbacks });
   } catch (err) {

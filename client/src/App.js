@@ -20,6 +20,8 @@ import { getToken } from "./utils/getToken";
 import ErrorPage from "./pages/ErrorPage";
 import MyProfile from "./pages/user/MyProfile";
 import { useUser } from "./Context/userContext";
+import Feedback from "./pages/Feedback";
+import AllFeedbacks from "./pages/AllFeedbacks";
 export const badgeColors = {
   gray: { bg: "bg-gray-50", text: "text-gray-600", ring: "ring-gray-500/10" },
   red: { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-600/10" },
@@ -52,10 +54,9 @@ export const badgeColors = {
 };
 
 const App = () => {
-  
   const dispatch = useDispatch();
   const token = getToken();
-  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated, isAdmin } = useSelector((state) => state.auth);
   const { user } = useUser();
   const { allProjects: globalProjects, projects: userProjects } = useSelector(
     (state) => state.projects
@@ -73,7 +74,7 @@ const App = () => {
   }, [user]);
 
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (isAuthenticated) {
       const getData = async () => {
         // ____________ Global Projects _______________
         const globalProjects = await dispatch(getAllProjects());
@@ -172,6 +173,10 @@ const App = () => {
                   path="/projects/:projectId/board/:boardId"
                   element={<SingleBoard />}
                 />
+                <Route path="/feedback" element={<Feedback />} />
+                {isAdmin && (
+                  <Route path="/all-feedbacks" element={<AllFeedbacks />} />
+                )}
               </>
             ) : (
               <Route path="*" element={<ErrorPage />} />

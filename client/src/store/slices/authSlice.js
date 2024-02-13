@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import { getToken } from "../../utils/getToken";
+import { decodeToken } from "react-jwt";
 
 export const googleLogin = createAsyncThunk(
   "googleLogin",
@@ -9,17 +10,20 @@ export const googleLogin = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/google-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username,
-          email,
-          profilePicture,
-          clientId,
-          email_verified,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/user/google-login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username,
+            email,
+            profilePicture,
+            clientId,
+            email_verified,
+          }),
+        }
+      );
       const data = await res.json();
 
       if (data.token) {
@@ -38,13 +42,16 @@ export const LoginUser = createAsyncThunk(
   "LoginUser",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const res = await fetch(` ${process.env.REACT_APP_SERVER_URL}/api/user/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        ` ${process.env.REACT_APP_SERVER_URL}/api/user/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
       const data = await res.json();
 
       if (data.token) {
@@ -62,15 +69,18 @@ export const RegisterUser = createAsyncThunk(
   "RegisterUser",
   async ({ username, email, password }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
+      const res = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/user/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username, email, password }),
+        }
+      );
       const data = await res.json();
-      console.log(data, "data")
+      console.log(data, "data");
       if (data.token) {
         localStorage.setItem("token", data.token);
         return data;
@@ -83,11 +93,17 @@ export const RegisterUser = createAsyncThunk(
     }
   }
 );
+const token = getToken();
+if (token) {
+  var user = decodeToken(token);
+}
 
 const initialState = {
   user: [],
   loading: false,
+  isAdmin: user?.email === "naveenbasyal.001@gmail.com",
   isAuthenticated: getToken() ? true : false,
+
   error: null,
 };
 
@@ -98,6 +114,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
+      state.isAdmin = false;
       localStorage.removeItem("token");
     },
   },
@@ -109,6 +126,8 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.loading = false;
       state.isAuthenticated = true;
+      state.isAdmin =
+        action.payload?.user?.email === "naveenbasyal.001@gmail.com";
       state.error = null;
     });
     builder.addCase(googleLogin.rejected, (state, action) => {
@@ -135,6 +154,7 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.loading = false;
       state.isAuthenticated = true;
+
       state.error = null;
     });
     builder.addCase(RegisterUser.rejected, (state, action) => {
