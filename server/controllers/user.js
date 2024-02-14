@@ -47,7 +47,7 @@ const RegisterUser = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL,
       to: email,
-      subject: "Verify your email",
+      subject: "KanBuddy - Verify your email",
       html: `
         <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
           <h1 style="color: #3498db;">Verify Your Email</h1>
@@ -109,7 +109,7 @@ const LoginUser = async (req, res) => {
       const mailOptions = {
         from: process.env.EMAIL,
         to: email,
-        subject: "Verify your email",
+        subject: "KanBuddy - Verify your email",
         html: `
         <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
           <h1 style="color: #3498db;">Kanbuddy - Verify Your Email</h1>
@@ -376,7 +376,7 @@ const resetPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL,
       to: email,
-      subject: "Reset your password",
+      subject: "KanBuddy - Reset your password",
       html: `
         <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
           <h1 style="color: #3498db;">KanBuddy - Reset Your Password</h1>
