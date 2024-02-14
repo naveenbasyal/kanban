@@ -47,7 +47,7 @@ export default function AllFeedbacks() {
         });
         const data = await response.json();
         console.log(data?.feedbacks);
-        if (data.feedbacks) {
+        if (data?.feedbacks) {
           setFeedbacks(data.feedbacks);
         }
       } catch (error) {
@@ -74,7 +74,7 @@ export default function AllFeedbacks() {
           <AiOutlineLoading className="animate-spin-fast h-5 w-5 ml-4" />
         </div>
       )}
-      {feedbacks.length > 0 ? (
+      {feedbacks?.length > 0 ? (
         feedbacks?.map(
           ({
             userId: { profilePicture, username, email },
@@ -91,7 +91,7 @@ export default function AllFeedbacks() {
               <AccordionHeader onClick={() => handleOpen(_id)}>
                 <div className=" flex items-center gap-6">
                   <LazyLoadImage
-                    src={profilePicture}
+                    src={profilePicture }
                     effect="blur"
                     className="h-12 w-12 rounded-full object-cover"
                     alt={username}

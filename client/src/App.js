@@ -101,19 +101,23 @@ const App = () => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    const globalData = [...globalProjects];
-    const userData = globalData?.filter(
-      (project) => project?.userId?._id === user?._id
-    );
-    const sharedProject = globalData?.filter((project) => {
-      if (project?.team?.find((member) => member?._id === user?._id)) {
-        return { ...project };
-      }
-    });
+    if (user?._id) {
+      const globalData = [...globalProjects];
 
-    const mergedProjects = [...userData, ...sharedProject];
+      const userData = globalData?.filter(
+        (project) => project?.userId?._id === user?._id
+      );
 
-    setAllProjects(mergedProjects);
+      const sharedProject = globalData?.filter((project) => {
+        if (project?.team?.find((member) => member?._id === user?._id)) {
+          return { ...project };
+        }
+      });
+
+      const mergedProjects = [...userData, ...sharedProject];
+
+      setAllProjects(mergedProjects);
+    }
   }, [globalProjects]);
 
   useEffect(() => {
