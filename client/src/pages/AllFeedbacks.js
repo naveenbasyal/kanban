@@ -183,7 +183,8 @@ export default function AllFeedbacks() {
               </div>
               {/* add comment */}
               <div className="flex items-center gap-10 justify-between p-3 bg-gray-100 dark:bg-slate-800 rounded-b-md">
-                <input
+                <textarea
+                  rows={4}
                   type="text"
                   placeholder="Add a comment"
                   value={newComment}

@@ -100,7 +100,7 @@ const Feedback = () => {
 
   return (
     <>
-      <div className="p-10  mx-20 h-3/4 flex items-center justify-center">
+      <div className="p-10  px-20 h-3/4 flex items-center justify-center">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-32 ">
           <div className="text-center md:text-left md:col-span-1 space-y-10 flex flex-col items-center justify-center">
             <h2 className="text-8xl text-indigo-200 font-extrabold  dark:text-slate-400">
@@ -207,7 +207,7 @@ const Feedback = () => {
         </div>
       </div>
       {/* _________ User's Feedback ___________ */}
-      <div className="w-full mt-10 mx-20 text-slate-500 h-2 text-xl dark:text-slate-400 ">
+      <div className="w-full mt-10 px-20 text-slate-500 h-2 text-xl dark:text-slate-400 ">
         {loading && (
           <div className="flex gap-4 items-center">
             Loading your feedbacks{" "}
@@ -217,7 +217,7 @@ const Feedback = () => {
       </div>
 
       {feedbacks?.length > 0 && (
-        <div className="p-10 mx-20 mb-32">
+        <div className="p-10 px-20 mb-32">
           <h2 className="text-6xl mb-10 font-semibold text-indigo-500 dark:text-slate-200">
             Your Feedbacks
           </h2>
@@ -416,7 +416,7 @@ const Feedback = () => {
       )}
 
       {feedbacks?.length === 0 && !loading && (
-        <div className="text-center mx-20">
+        <div className="text-center px-20">
           <p>You haven't submitted any feedback yet.</p>
         </div>
       )}
