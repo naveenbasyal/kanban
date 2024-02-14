@@ -49,7 +49,7 @@ export default function AllFeedbacks() {
           }
         );
         const data = await response.json();
-        console.log(data?.feedbacks);
+        
         if (data?.feedbacks) {
           setFeedbacks(data.feedbacks);
         }

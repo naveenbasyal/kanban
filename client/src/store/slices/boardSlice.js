@@ -16,7 +16,7 @@ export const CreateNewBoard = createAsyncThunk(
         }
       );
       const data = await res.json();
-      console.log("new Board", data.finalBoard);
+      
       return data;
     } catch (err) {
       console.log(err);
@@ -27,7 +27,7 @@ export const CreateNewBoard = createAsyncThunk(
 export const DeleteBoardById = createAsyncThunk(
   "DeleteBoardById",
   async ({ id, projectId }, { rejectWithValue }) => {
-    console.log(id, projectId);
+    
 
     try {
       const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/board/${projectId}`, {

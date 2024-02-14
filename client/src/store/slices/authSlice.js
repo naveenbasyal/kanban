@@ -25,7 +25,7 @@ export const googleLogin = createAsyncThunk(
         }
       );
       const data = await res.json();
-      console.log(data, "gogle login");
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
@@ -53,7 +53,7 @@ export const LoginUser = createAsyncThunk(
         }
       );
       const data = await res.json();
-      console.log(data);
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
       }

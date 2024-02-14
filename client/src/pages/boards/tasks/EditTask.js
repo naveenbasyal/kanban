@@ -234,7 +234,7 @@ const EditTaskOverlay = ({
                             name="hs-basic-usage"
                             checked={values.flagged}
                             onChange={(e) => {
-                              console.log(e.target.checked, "flagged");
+                              
                               setValues({
                                 ...values,
                                 flagged: e.target.checked,

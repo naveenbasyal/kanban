@@ -40,7 +40,7 @@ const deleteTask = async (req, res) => {
         { $pull: { tasks: id } },
         { new: true }
       );
-      console.log("deleted", task);
+      
       return res
         .status(200)
         .json({ task: task, message: "Task deleted successfully" });

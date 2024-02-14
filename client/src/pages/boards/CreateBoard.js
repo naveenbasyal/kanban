@@ -30,7 +30,7 @@ const CreateBoard = ({
   const dispatch = useDispatch();
   const cancelButtonRef = useRef(null);
   const projectId = useParams()?.projectId;
-  console.log("create board", project);
+  
   const { loading } = useSelector((state) => state.board);
 
   const {

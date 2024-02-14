@@ -284,6 +284,7 @@ const Register = () => {
                   }}
                   onError={() => {
                     console.log("Register Failed");
+                    toast.error("Register Failed");
                   }}
                 />
               </div>

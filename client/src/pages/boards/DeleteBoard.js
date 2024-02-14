@@ -46,7 +46,7 @@ const DeleteProjectOverlay = ({
     }
   };
   const cancelButtonRef = useRef(null);
-  console.log("Delete Project Overlay Changed", boardId);
+  
 
   return (
     <Transition.Root show={boardId ? true : false} as={Fragment}>

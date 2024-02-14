@@ -13,7 +13,7 @@ export const CreateNewColumn = createAsyncThunk(
         body: JSON.stringify({ name, boardId }),
       });
       const data = await res.json();
-      console.log("new Column", data);
+      
       return data;
     } catch (err) {
       console.log(err);
@@ -64,7 +64,7 @@ export const UpdateColumnOrder = createAsyncThunk(
         }),
       });
       const data = await res.json();
-      console.log("Column Reorder Done->", data);
+      
       return data;
     } catch (err) {
       console.log(err);
@@ -88,7 +88,7 @@ export const UpdateColName = createAsyncThunk(
         }),
       });
       const data = await res.json();
-      console.log("Column Rename Done", data);
+      
       return data;
     } catch (err) {
       console.log(err);
@@ -112,7 +112,7 @@ export const UpdateColLimit = createAsyncThunk(
         }),
       });
       const data = await res.json();
-      console.log("Column Limit Done", data);
+      
       return data;
     } catch (err) {
       console.log(err);

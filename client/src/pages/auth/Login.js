@@ -209,6 +209,7 @@ const Login = () => {
                   }}
                   onError={() => {
                     console.log("Login Failed");
+                    toast.error("Login Failed");
                   }}
                 />
               </div>
