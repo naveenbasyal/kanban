@@ -21,7 +21,7 @@ const feedbackRoute = require("./routes/feedback");
 const verifyToken = require("./middlewares/verifyToken");
 const User = require("./models/user");
 const Project = require("./models/projects");
-const { Board, Column } = require("./models/board");
+const { Board, Column, Task } = require("./models/board");
 
 dotenv.config();
 app.use(express.json());
@@ -123,3 +123,4 @@ app.use("/api/board", verifyToken, boardRoutes);
 app.use("/api/column", verifyToken, columnRoutes);
 app.use("/api/task", verifyToken, taskRoutes);
 app.use("/api/feedback", verifyToken, feedbackRoute);
+

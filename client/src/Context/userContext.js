@@ -27,7 +27,7 @@ const UserProvider = ({ children }) => {
       const decoded = decodeToken(token);
       const getData = async () => {
         const data = await dispatch(getSingleUser({ id: decoded?.id }));
-
+        console.log(data);
         if (data.payload) {
           setUser(data.payload);
         }

@@ -25,7 +25,7 @@ export const googleLogin = createAsyncThunk(
         }
       );
       const data = await res.json();
-
+      console.log(data, "gogle login");
       if (data.token) {
         localStorage.setItem("token", data.token);
       }
@@ -129,6 +129,7 @@ const authSlice = createSlice({
   reducers: {
     logout: (state) => {
       state.user = null;
+
       state.isAuthenticated = false;
       state.isAdmin = false;
       localStorage.removeItem("token");

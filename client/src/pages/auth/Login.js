@@ -51,9 +51,7 @@ const Login = () => {
         email_verified: userData.email_verified,
       })
     );
-    if (!data?.payload?.user?.verified) {
-      return navigate("/login");
-    }
+
     if (data?.payload?.token) {
       toast.success("Login Successful");
       navigate("/");
