@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
 
-const randomKey = new Date().getTime();
-
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -29,7 +27,10 @@ const userSchema = new mongoose.Schema(
         }`;
       },
     },
-
+    verified: {
+      type: Boolean,
+      default: false,
+    },
     projects: [
       {
         type: mongoose.Schema.Types.ObjectId,

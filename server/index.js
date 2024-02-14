@@ -19,6 +19,9 @@ const taskRoutes = require("./routes/taskRoutes");
 const columnRoutes = require("./routes/columnRoutes");
 const feedbackRoute = require("./routes/feedback");
 const verifyToken = require("./middlewares/verifyToken");
+const User = require("./models/user");
+const Project = require("./models/projects");
+const { Board, Column } = require("./models/board");
 
 dotenv.config();
 app.use(express.json());

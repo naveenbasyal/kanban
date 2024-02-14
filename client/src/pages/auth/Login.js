@@ -10,9 +10,10 @@ import { toast } from "react-toastify";
 
 const Login = () => {
   const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.auth);
+  const { loading, isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
+  const [message, setMessage] = useState("");
 
   const [values, setValues] = useState({
     email: "",
@@ -27,16 +28,16 @@ const Login = () => {
       toast.success("Login Successful");
       navigate("/");
     } else {
-      return toast.error(data?.payload || "Login Failed");
+      setMessage(data?.payload?.message || "Login Failed");
+      return toast.error(data?.payload?.message || "Login Failed");
     }
   };
+
   useEffect(() => {
-    if (localStorage.getItem("token")) {
+    if (isAuthenticated) {
       navigate("/");
-    } else {
-      navigate("/login");
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const continueWithGoogle = async (credential) => {
     const userData = jwtDecode(credential.credential);
@@ -50,9 +51,13 @@ const Login = () => {
         email_verified: userData.email_verified,
       })
     );
+    if (!data?.payload?.user?.verified) {
+      return navigate("/login");
+    }
     if (data?.payload?.token) {
       toast.success("Login Successful");
       navigate("/");
+      setMessage("");
     } else {
       toast.error("Login Failed");
     }
@@ -138,7 +143,6 @@ const Login = () => {
                       aria-describedby="terms"
                       type="checkbox"
                       className="w-5 mt-1 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 "
-                      required
                     />
                   </div>
                   <div className="ml-3 text-xl">
@@ -156,6 +160,11 @@ const Login = () => {
                     </label>
                   </div>
                 </div>
+                {message && (
+                  <div className="text-red-500 text-center font-medium">
+                    {message}
+                  </div>
+                )}
                 <button
                   type="submit"
                   disabled={loading}

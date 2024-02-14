@@ -24,6 +24,7 @@ import Feedback from "./pages/Feedback";
 import AllFeedbacks from "./pages/AllFeedbacks";
 import PreLoader from "./components/ui/PreLoader";
 import People from "./pages/user/People";
+import VerifyEmail from "./pages/auth/VerifyEmail";
 export const badgeColors = {
   gray: { bg: "bg-gray-50", text: "text-gray-600", ring: "ring-gray-500/10" },
   red: { bg: "bg-red-50", text: "text-red-700", ring: "ring-red-600/10" },
@@ -187,6 +188,7 @@ const App = () => {
             )}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/verify-email/:id/:token" element={<VerifyEmail />} />
           </Routes>
         </div>
       </div>

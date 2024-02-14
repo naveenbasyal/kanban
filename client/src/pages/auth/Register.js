@@ -19,6 +19,8 @@ const Register = () => {
   const { loading } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [show, setShow] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   const {
     handleChange,
@@ -36,7 +38,6 @@ const Register = () => {
     },
     validationSchema: registerValidation,
     onSubmit: (values) => {
-      console.log(values, "values");
       handleRegister(values);
     },
   });
@@ -50,10 +51,11 @@ const Register = () => {
       })
     );
 
-    if (data?.payload?.token) {
-      navigate("/");
+    if (data?.payload?.message) {
+      setMessage(data.payload.message);
     } else {
-      toast.error(data?.payload || "Register Failed");
+      console.log(data.payload, "error");
+      setError(data.payload || data.payload.error);
     }
   };
 
@@ -228,6 +230,13 @@ const Register = () => {
                     </label>
                   </div>
                 </div>
+                {message ? (
+                  <p className="text-xl text-green-500 font-[500] ">
+                    {message}
+                  </p>
+                ) : (
+                  error && <p className="text-xl text-red-500 ">{error}</p>
+                )}
 
                 <button
                   type="submit"

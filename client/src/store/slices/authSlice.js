@@ -53,13 +53,11 @@ export const LoginUser = createAsyncThunk(
         }
       );
       const data = await res.json();
-
+      console.log(data);
       if (data.token) {
         localStorage.setItem("token", data.token);
-        return data;
-      } else {
-        return rejectWithValue(data?.message || "Login Failed");
       }
+      return data;
     } catch (error) {
       return rejectWithValue(error.response);
     }
@@ -80,16 +78,34 @@ export const RegisterUser = createAsyncThunk(
         }
       );
       const data = await res.json();
-      console.log(data, "data");
-      if (data.token) {
-        localStorage.setItem("token", data.token);
-        return data;
-      } else {
-        return rejectWithValue(data?.message || "Register Failed");
-      }
+
       return data;
     } catch (error) {
       return rejectWithValue(error.response);
+    }
+  }
+);
+export const verifyEmail = createAsyncThunk(
+  "verifyEmail",
+  async ({ id, token }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/user/verify-email/${id}/${token}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = await res.json();
+
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+      }
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.response);
     }
   }
 );
@@ -138,9 +154,9 @@ const authSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(LoginUser.fulfilled, (state, action) => {
-      state.user = action?.payload?.user;
       state.loading = false;
-      state.isAuthenticated = true;
+      state.isAuthenticated = action.payload?.user?.verified ? true : false;
+
       state.error = null;
     });
     builder.addCase(LoginUser.rejected, (state, action) => {
@@ -151,13 +167,24 @@ const authSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(RegisterUser.fulfilled, (state, action) => {
-      state.user = action.payload.user;
       state.loading = false;
-      state.isAuthenticated = true;
 
       state.error = null;
     });
     builder.addCase(RegisterUser.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    });
+    builder.addCase(verifyEmail.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(verifyEmail.fulfilled, (state, action) => {
+      state.user = action.payload?.user;
+      state.loading = false;
+      state.isAuthenticated = action.payload?.user?.verified ? true : false;
+      state.error = null;
+    });
+    builder.addCase(verifyEmail.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload;
     });
