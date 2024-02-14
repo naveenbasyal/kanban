@@ -14,6 +14,7 @@ const store = configureStore({
     task: taskSlice,
     column: columnSlice,
   },
+  devTools: false,
 });
 
 export default store;
