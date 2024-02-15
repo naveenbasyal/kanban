@@ -76,6 +76,7 @@ export default function AllFeedbacks() {
       setCommentLoading(false);
     }
   };
+  console.log(feedbacks, "feedbacks-->");
   const handleOpen = (value) => setOpen(open === value ? 0 : value);
 
   return (
@@ -130,14 +131,14 @@ export default function AllFeedbacks() {
                         key={comment?._id}
                         className={`mb-2  flex gap-4 
                         ${
-                          comment.userId === user?._id
+                          comment.userId?._id === user?._id
                             ? "justify-end "
                             : "justify-start"
                         }
                         `}
                       >
                         <div className="w-[85%] flex gap-3">
-                          {comment.userId === user?._id ? (
+                          {comment.userId?._id === user?._id ? (
                             <LazyLoadImage
                               src={
                                 user?.profilePicture ||
