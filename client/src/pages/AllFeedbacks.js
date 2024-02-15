@@ -10,7 +10,7 @@ import { AiOutlineLoading } from "react-icons/ai";
 import { useUser } from "../Context/userContext";
 import { formatDistanceToNow } from "date-fns";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllFeedbacks } from "../store/slices/feedback";
+import { getAllFeedbacks, handleAddcomment } from "../store/slices/feedback";
 
 function Icon({ id, open }) {
   return (
@@ -37,46 +37,22 @@ export default function AllFeedbacks() {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(null);
 
-  const [commentLoading, setCommentLoading] = useState(false);
   const [newComment, setNewComment] = useState("");
   const { user } = useUser();
 
-  const { feedbacks, loading } = useSelector((state) => state.feedback);
+  const { feedbacks, commentLoading, loading } = useSelector(
+    (state) => state.feedback
+  );
 
   useEffect(() => {
     dispatch(getAllFeedbacks());
   }, []);
 
-  const handleAddcomment = async (id) => {
-    try {
-      setCommentLoading(true);
-      const response = await fetch(
-        `${
-          "http://localhost:8000" || process.env.REACT_APP_SERVER_URL
-        }/api/feedback/comment/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({ message: newComment, feedbackId: id }),
-        }
-      );
-      const data = await response.json();
-      console.log(data);
-      if (data?.message) {
-        toast.info(data.message);
-        setNewComment("");
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to add comment");
-    } finally {
-      setCommentLoading(false);
-    }
+  const handlePostcomment = async (id) => {
+    
+    dispatch(handleAddcomment({ message: newComment, feedbackId: id }));
   };
-  console.log(feedbacks, "feedbacks-->");
+
   const handleOpen = (value) => setOpen(open === value ? 0 : value);
 
   return (
@@ -107,6 +83,7 @@ export default function AllFeedbacks() {
                       userId?.username?.toLowerCase()?.split(" ")[0]
                     }`
                   }
+                  referrerPolicy="no-referrer"
                   effect="blur"
                   className="h-12 w-12 rounded-full object-cover"
                   alt={userId?.username}
@@ -147,6 +124,7 @@ export default function AllFeedbacks() {
                                 }`
                               }
                               effect="blur"
+                              referrerPolicy="no-referrer"
                               className="h-10 w-10 rounded-full object-cover"
                               alt={user?.username}
                               title={user?.username}
@@ -158,6 +136,7 @@ export default function AllFeedbacks() {
                               className="h-10 w-10 rounded-full object-cover"
                               alt={userId?.username}
                               title={userId?.username}
+                              referrerPolicy="no-referrer"
                             />
                           )}
                           <div className="comment-header flex flex-col bg-slate-200 dark:bg-slate-700 p-4 rounded-lg w-full">
@@ -194,7 +173,7 @@ export default function AllFeedbacks() {
                 />
                 <button
                   disabled={commentLoading}
-                  onClick={() => handleAddcomment(_id)}
+                  onClick={() => handlePostcomment(_id)}
                   className={`px-4 py-3 w-40 flex items-center justify-center 
                   ${
                     commentLoading

@@ -125,7 +125,7 @@ const Feedback = () => {
                 >
                   Title
                 </label>
-                <input
+              <input
                   type="text"
                   value={values.title}
                   onBlur={handleBlur}
