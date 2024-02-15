@@ -5,9 +5,7 @@ export const getUserFeedbacks = createAsyncThunk(
   async () => {
     try {
       const response = await fetch(
-        `${
-          "http://localhost:8000" || process.env.REACT_APP_SERVER_URL
-        }/api/feedback/user`,
+        `${process.env.REACT_APP_SERVER_URL}/api/feedback/user`,
         {
           method: "GET",
           headers: {
@@ -17,7 +15,7 @@ export const getUserFeedbacks = createAsyncThunk(
         }
       );
       const data = await response.json();
-
+      console.log("user feedbacks", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -48,12 +46,10 @@ export const getAllFeedbacks = createAsyncThunk("getAllFeedbacks", async () => {
 export const handleAddcomment = createAsyncThunk(
   "handleAddcomment",
   async ({ message, feedbackId }) => {
-    console.log(message, feedbackId, "message, feedbackId");
+    
     try {
       const response = await fetch(
-        `${
-          "http://localhost:8000" || process.env.REACT_APP_SERVER_URL
-        }/api/feedback/comment/`,
+        `${process.env.REACT_APP_SERVER_URL}/api/feedback/comment/`,
         {
           method: "POST",
           headers: {
@@ -77,9 +73,7 @@ export const handlePostFeedback = createAsyncThunk(
   async ({ title, message }) => {
     try {
       const response = await fetch(
-        `${
-          "http://localhost:8000" || process.env.REACT_APP_SERVER_URL
-        }/api/feedback/`,
+        `${process.env.REACT_APP_SERVER_URL}/api/feedback/`,
         {
           method: "POST",
           headers: {
@@ -125,7 +119,7 @@ const feedbackSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(getUserFeedbacks.fulfilled, (state, action) => {
-      state.userFeedbacks = action.payload.feedbacks;
+      state.userFeedbacks = action.payload?.feedbacks;
       state.loading = false;
     });
     builder.addCase(getUserFeedbacks.rejected, (state) => {

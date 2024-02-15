@@ -164,7 +164,7 @@ export default function AllFeedbacks() {
                             <p className="text-lg font-semibold dark:text-slate-200">
                               {comment.userId?.username}
                             </p>
-                            <p className="text-md text-slate-400 dark:text-slate-300">
+                            <p className="text-sm text-slate-400 dark:text-slate-300">
                               {formatDistanceToNow(
                                 new Date(comment.createdAt),
                                 {
