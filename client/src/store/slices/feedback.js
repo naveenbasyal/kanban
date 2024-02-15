@@ -46,7 +46,6 @@ export const getAllFeedbacks = createAsyncThunk("getAllFeedbacks", async () => {
 export const handleAddcomment = createAsyncThunk(
   "handleAddcomment",
   async ({ message, feedbackId }) => {
-    
     try {
       const response = await fetch(
         `${process.env.REACT_APP_SERVER_URL}/api/feedback/comment/`,
@@ -60,7 +59,7 @@ export const handleAddcomment = createAsyncThunk(
         }
       );
       const data = await response.json();
-
+      console.log("add commetn", data);
       return data;
     } catch (error) {
       console.log(error);

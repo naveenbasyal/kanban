@@ -49,8 +49,13 @@ export default function AllFeedbacks() {
   }, []);
 
   const handlePostcomment = async (id) => {
-    
-    dispatch(handleAddcomment({ message: newComment, feedbackId: id }));
+    const data = await dispatch(
+      handleAddcomment({ message: newComment, feedbackId: id })
+    );
+    if (data?.payload?.message) {
+      toast.info(data?.payload?.message);
+      setNewComment("");
+    }
   };
 
   const handleOpen = (value) => setOpen(open === value ? 0 : value);
