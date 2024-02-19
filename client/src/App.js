@@ -1,4 +1,7 @@
 import React, { useEffect, useState, Suspense, lazy } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from '@vercel/analytics/react';
+
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
@@ -86,15 +89,16 @@ const App = () => {
         const myprojects = await dispatch(getAllUserProjects());
 
         // ____________ Shared Projects with me _______________
-        const sharedProject = globalProjects?.payload.filter((project) => {
+        const sharedProject = globalProjects?.payload?.filter((project) => {
           if (project?.team?.find((member) => member?._id === user?._id)) {
             return { ...project };
           }
         });
 
-        const mergedProjects = [...myprojects?.payload, ...sharedProject];
-
-        setAllProjects(mergedProjects);
+        if (myprojects?.payload && sharedProject) {
+          const mergedProjects = [...myprojects?.payload, ...sharedProject];
+          setAllProjects(mergedProjects);
+        }
       };
       getData();
     }
@@ -196,6 +200,9 @@ const App = () => {
           </Routes>
         </div>
       </div>
+      <SpeedInsights />
+      <Analytics />
+
     </div>
   );
 };
