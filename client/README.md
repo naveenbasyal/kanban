@@ -3,6 +3,7 @@
 ## Overview
 
 KanBuddy is a collaborative project management tool designed to help teams efficiently organize tasks and streamline workflow using  Kanban board.
+na
 
 ## Features
 
