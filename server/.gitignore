@@ -7,7 +7,7 @@
 
 # testing
 /coverage
-env
+#secret
 .env
 # production
 /build
