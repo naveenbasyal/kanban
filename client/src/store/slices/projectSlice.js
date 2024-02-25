@@ -61,7 +61,7 @@ export const getAllProjects = createAsyncThunk(
         }
       );
       const data = await res.json();
-      // console.log("all global projects", data);
+      
       return data;
     } catch (err) {
       return rejectWithValue(err.response);
