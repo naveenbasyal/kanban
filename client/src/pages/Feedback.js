@@ -51,7 +51,7 @@ const Feedback = () => {
       onSubmit: async (values, { resetForm }) => {
         const { title, message } = values;
         const data = await dispatch(handlePostFeedback({ title, message }));
-        console.log(data)
+        // console.log(data)
         if (data?.meta?.requestStatus === "fulfilled") {
           resetForm();
           dispatch(getUserFeedbacks());

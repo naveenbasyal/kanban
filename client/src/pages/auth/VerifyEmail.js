@@ -17,7 +17,7 @@ const VerifyEmail = () => {
         navigate("/");
       } else {
         toast.error("Something went wrong, Please try again");
-        console.log(data, "problem in verify page");
+        // console.log(data, "problem in verify page");
       }
     };
     verify();

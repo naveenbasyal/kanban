@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllUsers } from "../../store/slices/userSlice";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -8,8 +8,16 @@ import { AiOutlineLoading } from "react-icons/ai";
 const People = () => {
   const dispatch = useDispatch();
   const { allusers, loading } = useSelector((state) => state.user);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   useEffect(() => {
-    dispatch(getAllUsers());
+    const getAllUser = async () => {
+      const data = await dispatch(getAllUsers());
+      if (data?.payload) {
+        const verifiedUsers = data.payload.filter((user) => user.verified);
+        setFilteredUsers(verifiedUsers);
+      }
+    };
+    getAllUser();
   }, []);
 
   return (
@@ -53,7 +61,7 @@ const People = () => {
                 </tr>
               </thead>
               <tbody>
-                {allusers?.map((user) => (
+                {filteredUsers?.map((user) => (
                   <tr key={user._id} className="border-b dark:border-slate-700">
                     <td className="py-4 px-4">
                       <LazyLoadImage

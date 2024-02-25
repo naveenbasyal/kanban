@@ -15,7 +15,7 @@ export const getUserFeedbacks = createAsyncThunk(
         }
       );
       const data = await response.json();
-      console.log("user feedbacks", data);
+      // console.log("user feedbacks", data);
       return data;
     } catch (error) {
       console.log(error);
@@ -59,7 +59,7 @@ export const handleAddcomment = createAsyncThunk(
         }
       );
       const data = await response.json();
-      console.log("add commetn", data);
+      // console.log("add commetn", data);
       return data;
     } catch (error) {
       console.log(error);
