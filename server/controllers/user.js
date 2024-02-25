@@ -211,8 +211,10 @@ const googleLogin = async (req, res) => {
       const user = await User.findOne({ email });
 
       if (user) {
-        if (!user.verified) user.verified = true;
-        await user.save();
+        if (!user.verified) {
+          user.verified = true;
+          await user.save();
+        }
         return res.status(200).json({
           message: "User logged in successfully",
           user: user,
@@ -269,6 +271,7 @@ const googleLogin = async (req, res) => {
         }
 
         await FirstBoard.save();
+        user.verified = true;
         await user.save();
 
         return res.status(200).json({
