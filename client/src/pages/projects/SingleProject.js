@@ -4,7 +4,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { FaRegEdit } from "react-icons/fa";
 import { FaPlus } from "react-icons/fa6";
-import LoadingScreen from "../../components/ui/LoadingScreen";
 import AllBoards from "../boards/AllBoards";
 import createBoard from "../../assets/createBoard.png";
 import CreateBoard from "../boards/CreateBoard";
@@ -28,7 +27,7 @@ const SingleProject = ({ setAllProjects }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useUser();
-  const { allProjects: projects, loading } = useSelector(
+  const { allProjects: projects } = useSelector(
     (state) => state?.projects
   );
   const [project, setProject] = useState([]);

@@ -46,7 +46,7 @@ const Navbar = ({ openProfile, setOpenProfile }) => {
           Hola Amigo
         </div>
 
-        <div className="search-bar">
+        <div className="search-bar ">
           <InputText
             placeholder="Find something here..."
             icon={<SearchIcon />}

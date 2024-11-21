@@ -7,7 +7,7 @@ import { AiOutlineLoading } from "react-icons/ai";
 
 const People = () => {
   const dispatch = useDispatch();
-  const { allusers, loading } = useSelector((state) => state.user);
+  const { loading } = useSelector((state) => state.user);
   const [filteredUsers, setFilteredUsers] = useState([]);
   useEffect(() => {
     const getAllUser = async () => {

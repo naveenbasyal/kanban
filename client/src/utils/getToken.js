@@ -1,4 +1,4 @@
-import { decodeToken, isExpired } from "react-jwt";
+import { isExpired } from "react-jwt";
 
 export const getToken = () => {
   const token = localStorage.getItem("token");

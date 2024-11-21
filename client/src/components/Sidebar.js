@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ActiveIndicator, FinishedIndicator, PausedIndicator } from "./svg";
-import { useUser } from "../Context/userContext";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useSelector } from "react-redux";
 
 const Sidebar = ({
   allBoards,
-  setAllBoards,
   selectedBoard,
   setSelectedBoard,
 }) => {
@@ -127,8 +125,8 @@ const Sidebar = ({
 
   return (
     <div
-      className="sidebar  gap-12 items-start flex flex-col min-w-[30rem]
-     max-w-[30rem] px-[1.8rem] py-[2.4rem] h-[100vh] bg-indigo-50 
+      className="sidebar  gap-12 items-start flex flex-col 
+      px-[1.8rem] py-[2.4rem] h-[100vh] bg-indigo-50 
       dark:bg-slate-900 dark:border-r-[1px] dark:border-r-slate-800"
     >
       <div className="brand-name">
@@ -244,7 +242,7 @@ const Sidebar = ({
                   className="text-gray-900 dark:text-slate-300 flex relative cursor-pointer
                    select-none  py-4 px-2 hover:text-indigo-600 dark:hover:bg-slate-700 hover:font-semibold hover:bg-indigo-100"
                 >
-                  <li id="listbox-option-0" role="option">
+                  <li id="listbox-option-0">
                     <div className="flex items-center">
                       <span
                         className={`${
@@ -253,9 +251,9 @@ const Sidebar = ({
                             : "font-[500]"
                         } ml-3 truncate text-xl flex gap-3`}
                       >
-                        {board?.status == "active" ? (
+                        {board?.status === "active" ? (
                           <ActiveIndicator width="17" height="17" />
-                        ) : board?.status == "paused" ? (
+                        ) : board?.status === "paused" ? (
                           <PausedIndicator width="17" height="17" />
                         ) : (
                           <FinishedIndicator width="17" height="17" />
@@ -268,7 +266,7 @@ const Sidebar = ({
                       </span>
                     </div>
                   </li>
-                  {selectedBoard?._id == board?._id && (
+                  {selectedBoard?._id === board?._id && (
                     <span className="text-indigo-600  absolute inset-y-0 right-0 flex items-center pr-4">
                       <svg
                         className="h-6 w-6 "

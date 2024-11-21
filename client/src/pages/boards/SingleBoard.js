@@ -47,9 +47,7 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
 
   // _______________ Get Projects ________________
   const { allProjects: projects } = useSelector((state) => state?.projects);
-  const { loading, assignLoading, deleteLoading } = useSelector(
-    (state) => state?.task
-  );
+  const { loading, assignLoading } = useSelector((state) => state?.task);
   const { loading: boardLoading } = useSelector((state) => state?.board);
 
   const { loading: mainLoading } = useSelector((state) => state?.projects);
@@ -62,7 +60,6 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
   const [toggleEditBoard, setToggleEditBoard] = useState(null);
 
   //  ______________ Progres Bar ________________
-  const [progress, setProgress] = useState(0);
 
   // _________ Members of all the tasks of this board ______
   const [allTasksMembers, setAllTasksMembers] = useState([]);
@@ -774,10 +771,10 @@ const SingleBoard = ({ allProjects, setAllProjects }) => {
             <div
               ref={provided.innerRef}
               {...provided.droppableProps}
-              className={`${
-                columnAlignment == "row"
-                  ? "flex overflow-x-auto w-[117rem]"
-                  : "grid grid-cols-3 gap-10 w-fit"
+              className={` ${
+                columnAlignment === "row"
+                  ? "flex overflow-x-auto w-[117rem] row-alignment"
+                  : "grid grid-cols-3 gap-10 w-fit column-alignment"
               } gap-10 my-10  pb-5`}
             >
               {board?.columns?.map((col, index) => {

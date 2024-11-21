@@ -199,7 +199,7 @@ const projectSlice = createSlice({
     builder.addCase(deleteSingleProject.fulfilled, (state, action) => {
       state.deleteLoading = false;
       const filteredProjects = state.projects.filter(
-        (project) => project._id != action.payload.project._id
+        (project) => project._id !== action.payload.project._id
       );
       state.projects = filteredProjects;
     });

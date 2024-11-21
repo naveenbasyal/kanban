@@ -28,7 +28,6 @@ html {
 /* Horizontal scrollbar */
 ::-webkit-scrollbar:horizontal {
   height: 0.6rem;
-  
 }
 ::-webkit-scrollbar-track:horizontal {
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
@@ -45,9 +44,103 @@ html {
 
 /* -----------TAsk cursor -------------- */
 [data-rbd-drag-handle-context-id="5"] {
-  cursor: default!important;
+  cursor: default !important;
 }
 
 .assignee-list-scroll::-webkit-scrollbar {
   width: 0.5rem;
+}
+
+/* Sidebar repsonsive ness */
+/* 1024 x 600 and 1024 x 768 */
+@media screen and (min-width: 1024px) and (max-width: 1279px) {
+  .search-bar {
+    display: none;
+  }
+  .row-alignment {
+    width: 70vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 1280 x 800 */
+@media screen and (min-width: 1280px) and (max-width: 1359px) {
+  .search-bar {
+    display: none;
+  }
+  .row-alignment {
+    width: 75vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 1366 x 768 */
+@media screen and (min-width: 1366px) and (max-width: 1439px) {
+  .row-alignment {
+    width: 75vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 1440 x 900 */
+@media screen and (min-width: 1440px) and (max-width: 1679px) {
+}
+
+/* 1680 x 1050 */
+@media screen and (min-width: 1680px) and (max-width: 1919px) {
+  .row-alignment {
+    width: 80vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* 1920 x 1080 and 1920 x 1200 */
+@media screen and (min-width: 1920px) and (max-width: 2559px) {
+  .row-alignment {
+    width: 80vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media screen and (min-width: 2560px) and (max-width: 3839px) {
+  .row-alignment {
+    width: 80vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+@media screen and (min-width: 3840px) and (max-width: 4095px) {
+  .row-alignment {
+    width: 80vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+}
+@media screen and (min-width: 4096px) and (max-width: 5119px) {
+  .row-alignment {
+    width: 80vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+}
+@media screen and (min-width: 5120px) and (max-width: 7679px) {
+  .row-alignment {
+    width: 80vw;
+  }
+  .column-alignment {
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+  }
 }
